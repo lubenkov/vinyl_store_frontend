@@ -1,0 +1,79 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+        @apply bg-ink-950 font-sans text-cream antialiased;
+        background-image:
+            radial-gradient(1100px 560px at 88% -12%, rgba(214, 159, 85, 0.11), transparent 62%),
+            radial-gradient(900px 520px at -10% 0%, rgba(214, 159, 85, 0.05), transparent 58%);
+        background-attachment: fixed;
+    }
+
+    ::selection {
+        @apply bg-brass-500/30 text-cream;
+    }
+
+    * {
+        scrollbar-width: thin;
+        scrollbar-color: #3b342e transparent;
+    }
+
+    ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: #3b342e;
+        border: 2px solid #0b0a09;
+        border-radius: 9999px;
+    }
+}
+
+@layer components {
+    .container-page {
+        @apply mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8;
+    }
+
+    .card {
+        @apply rounded-2xl border border-ink-700 bg-ink-900/70;
+    }
+
+    .section-title {
+        @apply font-display text-2xl text-cream sm:text-3xl;
+    }
+
+    .link-underline {
+        @apply underline decoration-brass-500/40 underline-offset-4 transition hover:decoration-brass-400;
+    }
+
+    .table-shell {
+        @apply overflow-hidden rounded-2xl border border-ink-700;
+    }
+
+    .table-shell table {
+        @apply w-full border-collapse text-left text-sm;
+    }
+
+    .table-shell thead {
+        @apply bg-ink-850 text-xs uppercase tracking-wider text-muted;
+    }
+
+    .table-shell th {
+        @apply px-4 py-3 font-medium;
+    }
+
+    .table-shell td {
+        @apply border-t border-ink-800 px-4 py-3 align-middle;
+    }
+
+    .table-shell tbody tr {
+        @apply transition hover:bg-ink-850/60;
+    }
+}
