@@ -1,5 +1,7 @@
 # Vinyl Store — фронтенд
 
+[![CI](https://github.com/lubenkov/vinyl_store_frontend/actions/workflows/ci.yml/badge.svg)](https://github.com/lubenkov/vinyl_store_frontend/actions/workflows/ci.yml)
+
 SPA для REST API [lubenkov/vinyl_store](https://github.com/lubenkov/vinyl_store):
 каталог пластинок, карточка релиза с отзывами, авторизация, профиль, покупка через
 Stripe и админ-панель.
@@ -10,7 +12,7 @@ Stripe и админ-панель.
 | --- | --- |
 | Сборка | Vite 5 + TypeScript |
 | UI | React 18, Tailwind CSS 3, lucide-react |
-| Роутинг | React Router 6 |
+| Роутинг | React Router 7 |
 | Данные | TanStack Query 5, `fetch` |
 | Линт | ESLint 9 + typescript-eslint |
 
