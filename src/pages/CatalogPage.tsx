@@ -88,15 +88,22 @@ export function CatalogPage() {
 
     const query = useQuery({
         queryKey: ['vinyls', { page, limit, sortBy, order, searchBy, searchTerm }],
-        queryFn: () =>
-            api.vinyls.list({
+        queryFn: async () => {
+            const base = {
                 limit,
                 offset: (page - 1) * limit,
                 sortBy,
                 order,
-                searchBy: searchTerm ? searchBy : undefined,
-                searchTerm: searchTerm || undefined,
-            }),
+            };
+            if (!searchTerm) return api.vinyls.list(base);
+            // «Везде»: сначала по названию, при пустом результате — по исполнителю.
+            if (searchBy === 'author') {
+                return api.vinyls.list({ ...base, searchBy: 'author', searchTerm });
+            }
+            const byName = await api.vinyls.list({ ...base, searchBy: 'name', searchTerm });
+            if (byName.count > 0) return byName;
+            return api.vinyls.list({ ...base, searchBy: 'author', searchTerm });
+        },
         placeholderData: keepPreviousData,
     });
 
@@ -142,7 +149,7 @@ export function CatalogPage() {
                         </a>
                         <span className="inline-flex items-center gap-2 text-sm text-muted">
                             <Disc3 className="h-4 w-4 text-brass-500" />
-                            {summary}
+                            Отобранный винил с отзывами
                         </span>
                     </div>
                 </div>
@@ -196,7 +203,7 @@ export function CatalogPage() {
                                     update({ sortBy: event.target.value, page: 1 })
                                 }
                                 aria-label="Сортировать по"
-                                className="w-auto min-w-36"
+                                className="w-full sm:w-44"
                             >
                                 {SORT_OPTIONS.map((option) => (
                                     <option key={option.value} value={option.value}>
@@ -210,7 +217,7 @@ export function CatalogPage() {
                                     update({ order: event.target.value, page: 1 })
                                 }
                                 aria-label="Направление сортировки"
-                                className="w-auto min-w-32"
+                                className="w-full sm:w-40"
                             >
                                 <option value="ASC">По возрастанию</option>
                                 <option value="DESC">По убыванию</option>

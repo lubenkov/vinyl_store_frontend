@@ -9,7 +9,9 @@ import { Button, buttonStyles } from '@/components/ui/Button';
 function navLinkClass({ isActive }: { isActive: boolean }): string {
     return cn(
         'rounded-lg px-3 py-2 text-sm transition',
-        isActive ? 'bg-ink-800 text-cream' : 'text-muted hover:bg-ink-800/60 hover:text-cream',
+        isActive
+            ? 'text-cream after:content-[""] after:block after:h-[2px] after:w-full after:rounded-full after:bg-brass-500'
+            : 'text-muted hover:text-cream',
     );
 }
 
