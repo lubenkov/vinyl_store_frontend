@@ -6,6 +6,7 @@ import { CatalogPage } from '@/pages/CatalogPage';
 import { VinylDetailPage } from '@/pages/VinylDetailPage';
 import { LoginPage } from '@/pages/LoginPage';
 import { RegisterPage } from '@/pages/RegisterPage';
+import { GoogleCallbackPage } from '@/pages/GoogleCallbackPage';
 import { ProfilePage } from '@/pages/ProfilePage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { AdminLayout } from '@/pages/admin/AdminLayout';
@@ -34,6 +35,7 @@ export function App() {
                     <Route path="vinyls/:id" element={<VinylDetailPage />} />
                     <Route path="login" element={<LoginPage />} />
                     <Route path="register" element={<RegisterPage />} />
+                    <Route path="auth/google/callback" element={<GoogleCallbackPage />} />
                     <Route
                         path="profile"
                         element={
@@ -55,6 +57,7 @@ export function App() {
                         <Route path="discogs" element={<AdminDiscogsPage />} />
                         <Route path="telegram" element={<AdminTelegramPage />} />
                         <Route path="logs" element={<AdminLogsPage />} />
+                        <Route path="*" element={<Navigate to="vinyls" replace />} />
                     </Route>
                     <Route path="*" element={<NotFoundPage />} />
                 </Route>

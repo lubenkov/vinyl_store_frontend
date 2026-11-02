@@ -16,19 +16,13 @@ import { averageScore, formatDate, formatPrice, initials, pluralize } from '@/li
 import { VinylCover } from '@/components/VinylCover';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { Field, Select, Textarea } from '@/components/ui/Form';
+import { Field, Textarea } from '@/components/ui/Form';
 import { Modal } from '@/components/ui/Modal';
 import { Stars } from '@/components/ui/Stars';
 import { EmptyState, ErrorState, Spinner } from '@/components/ui/States';
 import type { CreateReviewInput, Purchase, Review } from '@/types/api';
 
 const REVIEWS_PER_PAGE = 5;
-
-const CURRENCIES = [
-    { value: 'usd', label: 'USD — доллар США' },
-    { value: 'eur', label: 'EUR — евро' },
-    { value: 'gbp', label: 'GBP — фунт стерлингов' },
-];
 
 function ReviewItem({
     review,
@@ -94,7 +88,6 @@ export function VinylDetailPage() {
     const [score, setScore] = useState(0);
     const [content, setContent] = useState('');
     const [buyOpen, setBuyOpen] = useState(false);
-    const [currency, setCurrency] = useState('usd');
     const [purchase, setPurchase] = useState<Purchase | null>(null);
     const [reviewToDelete, setReviewToDelete] = useState<Review | null>(null);
 
@@ -139,7 +132,7 @@ export function VinylDetailPage() {
     });
 
     const buy = useMutation({
-        mutationFn: () => api.purchases.create(vinylId, currency),
+        mutationFn: () => api.purchases.create(vinylId),
         onSuccess: (data) => {
             setPurchase(data);
             notify('Заказ создан. Проверьте статус платежа.', 'success');
@@ -418,7 +411,7 @@ export function VinylDetailPage() {
                 description={
                     purchase
                         ? 'Платёж зарегистрирован на стороне бэкенда.'
-                        : 'Проверьте состав заказа и валюту.'
+                        : 'Проверьте состав заказа.'
                 }
                 size="sm"
                 footer={
@@ -491,22 +484,9 @@ export function VinylDetailPage() {
                                 </p>
                             </div>
                         </div>
-                        <Field label="Валюта" htmlFor="purchase-currency">
-                            <Select
-                                id="purchase-currency"
-                                value={currency}
-                                onChange={(event) => setCurrency(event.target.value)}
-                            >
-                                {CURRENCIES.map((option) => (
-                                    <option key={option.value} value={option.value}>
-                                        {option.label}
-                                    </option>
-                                ))}
-                            </Select>
-                        </Field>
                         <p className="text-xs leading-relaxed text-muted">
-                            Итоговая сумма списывается Stripe в выбранной валюте. Сумма
-                            заказа берётся из базы данных, а не из запроса.
+                            Сумма указана в долларах США и берётся из базы данных, а не из
+                            запроса.
                         </p>
                     </div>
                 )}

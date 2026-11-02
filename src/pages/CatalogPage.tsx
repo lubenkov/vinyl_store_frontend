@@ -81,10 +81,13 @@ export function CatalogPage() {
     }, [searchTerm]);
 
     useEffect(() => {
+        // Wait until the debounced value catches up with the input; otherwise a
+        // reset can briefly push the stale term back into the URL.
+        if (debouncedSearch !== searchInput) return;
         if (debouncedSearch === searchTerm) return;
         lastPushedSearch.current = debouncedSearch;
         update({ searchTerm: debouncedSearch || undefined, page: 1 });
-    }, [debouncedSearch, searchTerm, update]);
+    }, [debouncedSearch, searchInput, searchTerm, update]);
 
     const query = useQuery({
         queryKey: ['vinyls', { page, limit, sortBy, order, searchBy, searchTerm }],

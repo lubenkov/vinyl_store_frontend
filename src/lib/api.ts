@@ -22,6 +22,10 @@ export const UNAUTHORIZED_EVENT = 'vinyl:unauthorized';
 
 const API_BASE = (import.meta.env.VITE_API_URL ?? '').replace(/\/+$/, '') || '/api';
 
+export function apiUrl(path: string): string {
+    return `${API_BASE}${path}`;
+}
+
 export class ApiError extends Error {
     status: number;
 
@@ -181,10 +185,10 @@ export const api = {
         remove: (id: number) => request<void>(`/reviews/${id}`, { method: 'DELETE' }),
     },
     purchases: {
-        create: (vinylId: number, currency: string) =>
+        create: (vinylId: number) =>
             request<Purchase>('/purchases', {
                 method: 'POST',
-                body: { vinylId, currency },
+                body: { vinylId, currency: 'usd' },
             }),
     },
     discogs: {

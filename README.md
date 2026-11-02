@@ -45,6 +45,16 @@ VITE_API_URL=http://localhost:3000
 включён). Для продакшена это единственный вариант: соберите `npm run build` и
 раздайте `dist/`, либо настройте reverse-proxy для `/api`.
 
+### Вход через Google
+
+Кнопка «Продолжить с Google» ведёт на `GET /auth/google` бэкенда. После
+авторизации бэкенд возвращает JWT на `/auth/google/callback` фронтенда, а SPA
+сохраняет токен и очищает адресную строку.
+
+На бэкенде задайте `FRONTEND_URL` (origin фронтенда, по умолчанию
+`http://localhost:5173`) и добавьте `GOOGLE_CALLBACK_URL` в список разрешённых
+redirect URI в Google Console.
+
 ### Права администратора
 
 Регистрация через `/auth/register` всегда создаёт роль `user`. Чтобы открыть
@@ -65,6 +75,7 @@ UPDATE users SET role = 'admin' WHERE email = 'you@example.com';
 | `npm run preview` | Локальный просмотр собранной версии |
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm run lint` | ESLint по проекту |
+| `npm run test` | Vitest: юнит-тесты форматтеров и API-клиента |
 
 ## Маршруты
 
@@ -72,7 +83,8 @@ UPDATE users SET role = 'admin' WHERE email = 'you@example.com';
 | --- | --- | --- |
 | `/` | публично | Каталог: поиск, сортировка, пагинация |
 | `/vinyls/:id` | публично | Карточка пластинки, отзывы, покупка |
-| `/login`, `/register` | публично | Вход и регистрация по email/паролю |
+| `/login`, `/register` | публично | Вход по email/паролю или Google, регистрация |
+| `/auth/google/callback` | публично | Приём JWT после Google OAuth |
 | `/profile` | JWT | Профиль, редактирование, история покупок и отзывов, удаление аккаунта |
 | `/admin/vinyls` | admin | CRUD пластинок |
 | `/admin/discogs` | admin | Поиск релиза по ID и импорт в каталог |
@@ -86,12 +98,12 @@ UPDATE users SET role = 'admin' WHERE email = 'you@example.com';
 
 | Возможность | Эндпоинты |
 | --- | --- |
-| Авторизация | `POST /auth/register`, `POST /auth/login` → `{ accessToken }` |
+| Авторизация | `POST /auth/register`, `POST /auth/login` → `{ accessToken }`, `GET /auth/google` |
 | Профиль | `GET/PUT/DELETE /users/profile` |
 | Каталог | `GET /vinyls?limit&offset&sortBy&order&searchBy&searchTerm` → `{ rows, count }` |
 | Пластинка | `GET /vinyls/:id`, `POST/PUT/DELETE /vinyls[/:id]` |
 | Отзывы | `GET/POST /vinyls/:id/reviews`, `DELETE /reviews/:id` |
-| Покупка | `POST /purchases` (`vinylId`, `currency`) |
+| Покупка | `POST /purchases` (`vinylId`, `currency: 'usd'`) |
 | Discogs | `GET /discogs/vinyls/:id/scores`, `POST /discogs/vinyls/:id` |
 | Telegram | `POST /telegram/sendVinyl` |
 | Логи | `GET /logs` |
@@ -101,21 +113,19 @@ JWT хранится в `localStorage` и отправляется заголо�
 
 ## Ограничения бэкенда, учтённые в UI
 
-1. **Google OAuth.** `GET /auth/google/callback` кладёт JWT в httpOnly-cookie, а
-   `AuthGuard`/`AdminGuard` читают только заголовок `Authorization`. Поэтому вход
-   через Google из SPA сейчас не работает; в форме входа выведено пояснение.
-   Исправление на бэкенде: отдавать токен фронтенду или читать cookie в guard.
-2. **Stripe.** `POST /purchases` создаёт PaymentIntent, но не возвращает
+1. **Stripe.** `POST /purchases` создаёт PaymentIntent, но не возвращает
    `client_secret`, поэтому Stripe Elements на фронтенде не подключён. Модальное
-   окно показывает созданный заказ и его статус.
-3. **Пагинация отзывов.** `GET /vinyls/:id/reviews` возвращает только массив без
+   окно показывает созданный заказ и его статус. Создание заказа и запись в
+   историю покупок при этом работают.
+2. **Пагинация отзывов.** `GET /vinyls/:id/reviews` возвращает только массив без
    общего количества, поэтому кнопка «Дальше» активна, пока страница заполнена
    целиком.
-4. **Импорт Discogs** требует `DISCOGS_KEY`/`DISCOGS_SECRET`, Telegram —
+3. **Импорт Discogs** требует `DISCOGS_KEY`/`DISCOGS_SECRET`, Telegram —
    `TELEGRAM_BOT_TOKEN`/`TELEGRAM_CHAT_ID` в `.env` бэкенда.
-5. **Цена** в БД хранится как `DECIMAL`, поэтому приходит строкой; в UI она
-   приводится к числу и показывается в USD.
-6. **Журнал действий.** Колонка `logs.action` создаётся миграцией как
+4. **Цена** в БД хранится как `DECIMAL`, поэтому приходит строкой; в UI она
+   приводится к числу и показывается в USD. Валюта покупки фиксирована — доллар
+   США.
+5. **Журнал действий.** Колонка `logs.action` создаётся миграцией как
    `VARCHAR(255)`, а сервис пишет туда полный JSON пластинки. На длинном
    описании или URL обложки импорт Discogs падал с 500. В текущей базе колонка
    расширена до `TEXT`; для чистой установки нужно применить
@@ -137,9 +147,11 @@ src/
 
 ```bash
 npm run typecheck
-npm run build
 npm run lint
+npm run test
+npm run build
 ```
 
-Тестового набора пока нет: сценарии проверялись типами, production-сборкой и
-прогоном dev-сервера против мок-API.
+Vitest проверяет форматирование цены и дат, склонение, подсчёт среднего балла и
+`ApiError` — 9 тестов. CI (`.github/workflows/ci.yml`) прогоняет те же команды
+на каждый push и pull request в `master`.
