@@ -8,13 +8,13 @@ Stripe и админ-панель.
 
 ## Стек
 
-| Слой | Что используется |
-| --- | --- |
-| Сборка | Vite 5 + TypeScript |
-| UI | React 18, Tailwind CSS 3, lucide-react |
-| Роутинг | React Router 7 |
-| Данные | TanStack Query 5, `fetch` |
-| Линт | ESLint 9 + typescript-eslint |
+| Слой    | Что используется                       |
+| ------- | -------------------------------------- |
+| Сборка  | Vite 5 + TypeScript                    |
+| UI      | React 18, Tailwind CSS 3, lucide-react |
+| Роутинг | React Router 7                         |
+| Данные  | TanStack Query 5, `fetch`              |
+| Линт    | ESLint 9 + typescript-eslint           |
 
 ## Быстрый старт
 
@@ -29,31 +29,36 @@ npm run dev
 
 3. Откройте `http://localhost:5173`.
 
-Vite проксирует `/api/*` на `http://localhost:3000`, убирая префикс `/api`
-(`/api/vinyls` → `http://localhost:3000/vinyls`). Префикс нужен, чтобы SPA-маршрут
-`/vinyls/:id` не перехватывался прокси.
+Vite проксирует `/api/*` на `http://localhost:3000`, сохраняя префикс
+(`/api/vinyls` → `http://localhost:3000/api/vinyls`). Бэкенд сам монтирует все
+роуты под `/api`, а префикс заодно не даёт прокси перехватывать SPA-маршрут
+`/vinyls/:id`.
 
 ### Другой адрес API
 
 Создайте `.env.local`:
 
 ```env
-VITE_API_URL=http://localhost:3000
+VITE_API_URL=http://localhost:3000/api
 ```
 
-При заданном `VITE_API_URL` запросы идут напрямую на бэкенд (CORS в нём уже
-включён). Для продакшена это единственный вариант: соберите `npm run build` и
-раздайте `dist/`, либо настройте reverse-proxy для `/api`.
+При заданном `VITE_API_URL` запросы идут напрямую на бэкенд (CORS в нём включён
+по списку origin'ов из `CORS_ORIGINS`/`FRONTEND_URL`). Для продакшена укажите
+полный адрес API вместе с `/api`, например
+`https://vinyl-store-api.vercel.app/api`. Переменная встраивается в сборку, поэтому
+после изменения нужен новый деплой.
 
 ### Вход через Google
 
-Кнопка «Продолжить с Google» ведёт на `GET /auth/google` бэкенда. После
+Кнопка «Продолжить с Google» ведёт на `GET /api/auth/google` бэкенда. После
 авторизации бэкенд возвращает JWT на `/auth/google/callback` фронтенда, а SPA
 сохраняет токен и очищает адресную строку.
 
 На бэкенде задайте `FRONTEND_URL` (origin фронтенда, по умолчанию
 `http://localhost:5173`) и добавьте `GOOGLE_CALLBACK_URL` в список разрешённых
-redirect URI в Google Console.
+redirect URI в Google Console. Локально это
+`http://localhost:3000/api/auth/google/callback`, на Vercel —
+`https://<backend>.vercel.app/api/auth/google/callback`.
 
 ### Права администратора
 
@@ -68,45 +73,45 @@ UPDATE users SET role = 'admin' WHERE email = 'you@example.com';
 
 ## Скрипты
 
-| Команда | Что делает |
-| --- | --- |
-| `npm run dev` | Dev-сервер Vite на :5173 |
-| `npm run build` | Проверка типов + production-сборка в `dist/` |
-| `npm run preview` | Локальный просмотр собранной версии |
-| `npm run typecheck` | `tsc --noEmit` |
-| `npm run lint` | ESLint по проекту |
-| `npm run test` | Vitest: юнит-тесты форматтеров и API-клиента |
+| Команда             | Что делает                                   |
+| ------------------- | -------------------------------------------- |
+| `npm run dev`       | Dev-сервер Vite на :5173                     |
+| `npm run build`     | Проверка типов + production-сборка в `dist/` |
+| `npm run preview`   | Локальный просмотр собранной версии          |
+| `npm run typecheck` | `tsc --noEmit`                               |
+| `npm run lint`      | ESLint по проекту                            |
+| `npm run test`      | Vitest: юнит-тесты форматтеров и API-клиента |
 
 ## Маршруты
 
-| Путь | Доступ | Что внутри |
-| --- | --- | --- |
-| `/` | публично | Каталог: поиск, сортировка, пагинация |
-| `/vinyls/:id` | публично | Карточка пластинки, отзывы, покупка |
-| `/login`, `/register` | публично | Вход по email/паролю или Google, регистрация |
-| `/auth/google/callback` | публично | Приём JWT после Google OAuth |
-| `/profile` | JWT | Профиль, редактирование, история покупок и отзывов, удаление аккаунта |
-| `/admin/vinyls` | admin | CRUD пластинок |
-| `/admin/discogs` | admin | Поиск релиза по ID и импорт в каталог |
-| `/admin/telegram` | admin | Отправка карточки в Telegram |
-| `/admin/logs` | admin | Журнал действий |
+| Путь                    | Доступ   | Что внутри                                                            |
+| ----------------------- | -------- | --------------------------------------------------------------------- |
+| `/`                     | публично | Каталог: поиск, сортировка, пагинация                                 |
+| `/vinyls/:id`           | публично | Карточка пластинки, отзывы, покупка                                   |
+| `/login`, `/register`   | публично | Вход по email/паролю или Google, регистрация                          |
+| `/auth/google/callback` | публично | Приём JWT после Google OAuth                                          |
+| `/profile`              | JWT      | Профиль, редактирование, история покупок и отзывов, удаление аккаунта |
+| `/admin/vinyls`         | admin    | CRUD пластинок                                                        |
+| `/admin/discogs`        | admin    | Поиск релиза по ID и импорт в каталог                                 |
+| `/admin/telegram`       | admin    | Отправка карточки в Telegram                                          |
+| `/admin/logs`           | admin    | Журнал действий                                                       |
 
 ## Работа с API
 
 Типы и вызовы собраны в `src/types/api.ts` и `src/lib/api.ts` по реальным
-контроллерам и DTO бэкенда.
+контроллерам и DTO бэкенда. Все пути ниже указаны без общего префикса `/api`.
 
-| Возможность | Эндпоинты |
-| --- | --- |
+| Возможность | Эндпоинты                                                                         |
+| ----------- | --------------------------------------------------------------------------------- |
 | Авторизация | `POST /auth/register`, `POST /auth/login` → `{ accessToken }`, `GET /auth/google` |
-| Профиль | `GET/PUT/DELETE /users/profile` |
-| Каталог | `GET /vinyls?limit&offset&sortBy&order&searchBy&searchTerm` → `{ rows, count }` |
-| Пластинка | `GET /vinyls/:id`, `POST/PUT/DELETE /vinyls[/:id]` |
-| Отзывы | `GET/POST /vinyls/:id/reviews`, `DELETE /reviews/:id` |
-| Покупка | `POST /purchases` (`vinylId`, `currency: 'usd'`) |
-| Discogs | `GET /discogs/vinyls/:id/scores`, `POST /discogs/vinyls/:id` |
-| Telegram | `POST /telegram/sendVinyl` |
-| Логи | `GET /logs` |
+| Профиль     | `GET/PUT/DELETE /users/profile`                                                   |
+| Каталог     | `GET /vinyls?limit&offset&sortBy&order&searchBy&searchTerm` → `{ rows, count }`   |
+| Пластинка   | `GET /vinyls/:id`, `POST/PUT/DELETE /vinyls[/:id]`                                |
+| Отзывы      | `GET/POST /vinyls/:id/reviews`, `DELETE /reviews/:id`                             |
+| Покупка     | `POST /purchases` (`vinylId`, `currency: 'usd'`)                                  |
+| Discogs     | `GET /discogs/vinyls/:id/scores`, `POST /discogs/vinyls/:id`                      |
+| Telegram    | `POST /telegram/sendVinyl`                                                        |
+| Логи        | `GET /logs`                                                                       |
 
 JWT хранится в `localStorage` и отправляется заголовком `Authorization: Bearer …`.
 При ответе 401 токен сбрасывается, пользователь возвращается на `/login`.
@@ -125,11 +130,9 @@ JWT хранится в `localStorage` и отправляется заголо�
 4. **Цена** в БД хранится как `DECIMAL`, поэтому приходит строкой; в UI она
    приводится к числу и показывается в USD. Валюта покупки фиксирована — доллар
    США.
-5. **Журнал действий.** Колонка `logs.action` создаётся миграцией как
-   `VARCHAR(255)`, а сервис пишет туда полный JSON пластинки. На длинном
-   описании или URL обложки импорт Discogs падал с 500. В текущей базе колонка
-   расширена до `TEXT`; для чистой установки нужно применить
-   `ALTER TABLE logs MODIFY action TEXT NOT NULL;`.
+5. **Журнал действий.** Колонка `logs.action` хранит полный JSON пластинки.
+   Миграция `20241116000000-fix-logs-action-text.js` в бэкенде меняет её на
+   `TEXT`; для уже существующей базы достаточно применить миграции бэкенда.
 
 ## Структура
 
@@ -142,6 +145,32 @@ src/
   pages/admin/      админ-раздел с вложенными маршрутами
   types/            типы ответов API
 ```
+
+## Деплой на Vercel
+
+Фронтенд — отдельный статический Vercel-проект, бэкенд — отдельный NestJS
+Vercel Function. Общего origin и reverse-proxy нет, поэтому API задаётся
+абсолютным URL.
+
+1. Импортируйте репозиторий на <https://vercel.com/new>. Vercel определит Vite;
+   build command — `npm run build`, output directory — `dist`.
+2. В Project Settings → Environment Variables добавьте:
+
+```env
+VITE_API_URL=https://<backend>.vercel.app/api
+```
+
+3. В бэкенде на Vercel задайте `FRONTEND_URL=https://<frontend>.vercel.app` и
+   `CORS_ORIGINS=https://<frontend>.vercel.app`. Для preview-деплоев можно
+   добавить `https://*.vercel.app`.
+4. В Google Console добавьте backend-callback
+   `https://<backend>.vercel.app/api/auth/google/callback`.
+5. `vercel.json` уже содержит SPA-fallback на `index.html`, поэтому deep-link'и
+   `/vinyls/:id`, `/profile` и `/admin/*` не дают 404.
+
+Первый запрос к backend-функции после простоя может быть медленнее из-за
+холодного старта. Задайте `VITE_API_URL` и для окружения Preview, иначе
+preview-сборка будет обращаться к `/api` на собственном домене и получит 404.
 
 ## Проверки
 

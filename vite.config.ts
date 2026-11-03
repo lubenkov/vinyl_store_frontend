@@ -12,12 +12,11 @@ export default defineConfig({
     server: {
         port: 5173,
         proxy: {
-            // The backend lives on :3000. The /api prefix keeps SPA routes such as
-            // /vinyls/:id from being swallowed by the proxy.
+            // The backend mounts every route under /api, so keep the prefix.
+            // It also keeps SPA routes such as /vinyls/:id from being proxied.
             '/api': {
                 target: 'http://localhost:3000',
                 changeOrigin: true,
-                rewrite: (path) => path.replace(/^\/api/, ''),
             },
         },
     },
