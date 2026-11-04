@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import { OAUTH_STATE_KEY } from '@/lib/oauth';
 import { buttonStyles } from '@/components/ui/Button';
 import { EmptyState, Spinner } from '@/components/ui/States';
 
@@ -13,10 +14,14 @@ export function GoogleCallbackPage() {
     useEffect(() => {
         const params = new URLSearchParams(location.hash.replace(/^#/, ''));
         const accessToken = params.get('accessToken');
+        const state = params.get('state');
+        let expectedState: string | null = null;
 
-        if (!accessToken) {
-            setError('Google не вернул токен. Попробуйте войти ещё раз.');
-            return;
+        try {
+            expectedState = sessionStorage.getItem(OAUTH_STATE_KEY);
+            sessionStorage.removeItem(OAUTH_STATE_KEY);
+        } catch {
+            /* storage may be unavailable */
         }
 
         // Do not keep the token in the address bar or browser history.
@@ -25,6 +30,19 @@ export function GoogleCallbackPage() {
             '',
             `${location.pathname}${location.search}`,
         );
+
+        if (!accessToken) {
+            setError('Google не вернул токен. Попробуйте войти ещё раз.');
+            return;
+        }
+
+        if (!state || !expectedState || state !== expectedState) {
+            setError(
+                'Не удалось проверить вход через Google. Начните вход заново.',
+            );
+            return;
+        }
+
         signIn(accessToken);
         navigate('/', { replace: true });
     }, [location.hash, location.pathname, location.search, navigate, signIn]);

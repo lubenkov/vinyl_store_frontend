@@ -1,8 +1,9 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import { LogIn } from 'lucide-react';
 import { api, apiUrl } from '@/lib/api';
+import { createOAuthState, OAUTH_STATE_KEY } from '@/lib/oauth';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
 import { AuthShell } from '@/components/auth/AuthShell';
@@ -47,6 +48,17 @@ export function LoginPage() {
     const [password, setPassword] = useState('');
     const [error, setError] = useState<string | null>(null);
 
+    useEffect(() => {
+        const code = new URLSearchParams(location.search).get('error');
+        if (code === 'google_account_exists') {
+            setError(
+                'Этот email уже зарегистрирован с паролем. Войдите с помощью пароля.',
+            );
+        } else if (code === 'google') {
+            setError('Не удалось войти через Google. Попробуйте ещё раз.');
+        }
+    }, [location.search]);
+
     const login = useMutation({
         mutationFn: api.auth.login,
         onSuccess: (data) => {
@@ -67,6 +79,18 @@ export function LoginPage() {
             return;
         }
         login.mutate({ email: email.trim(), password });
+    };
+
+    const handleGoogleLogin = () => {
+        try {
+            const state = createOAuthState();
+            sessionStorage.setItem(OAUTH_STATE_KEY, state);
+            window.location.assign(
+                `${apiUrl('/auth/google')}?state=${encodeURIComponent(state)}`,
+            );
+        } catch {
+            setError('Браузер не позволяет начать вход через Google.');
+        }
     };
 
     return (
@@ -124,13 +148,14 @@ export function LoginPage() {
                 <span className="h-px flex-1 bg-ink-700" />
             </div>
 
-            <a
-                href={apiUrl('/auth/google')}
+            <button
+                type="button"
+                onClick={handleGoogleLogin}
                 className={buttonStyles('secondary', 'md', 'w-full')}
             >
                 <GoogleIcon />
                 Продолжить с Google
-            </a>
+            </button>
         </AuthShell>
     );
 }
