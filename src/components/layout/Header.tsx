@@ -81,9 +81,6 @@ export function Header() {
                         <span className="block font-display text-lg font-semibold tracking-wide text-cream">
                             Vinyl Store
                         </span>
-                        <span className="mt-1 block text-[10px] uppercase tracking-[0.22em] text-muted">
-                            виниловая лавка
-                        </span>
                     </span>
                 </Link>
 

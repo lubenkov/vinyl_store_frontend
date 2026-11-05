@@ -15,8 +15,6 @@ import { Stars } from '@/components/ui/Stars';
 interface ProfileForm {
     firstName: string;
     lastName: string;
-    birthdate: string;
-    avatar: string;
 }
 
 export function ProfilePage() {
@@ -29,8 +27,6 @@ export function ProfilePage() {
     const [form, setForm] = useState<ProfileForm>({
         firstName: user?.firstName ?? '',
         lastName: user?.lastName ?? '',
-        birthdate: user?.birthdate?.slice(0, 10) ?? '',
-        avatar: user?.avatar ?? '',
     });
     const [formError, setFormError] = useState<string | null>(null);
 
@@ -39,8 +35,6 @@ export function ProfilePage() {
             api.users.update({
                 firstName: form.firstName.trim(),
                 lastName: form.lastName.trim(),
-                birthdate: form.birthdate || undefined,
-                avatar: form.avatar.trim() || undefined,
             }),
         onSuccess: async () => {
             await refresh();
@@ -66,8 +60,6 @@ export function ProfilePage() {
         setForm({
             firstName: user.firstName ?? '',
             lastName: user.lastName ?? '',
-            birthdate: user.birthdate?.slice(0, 10) ?? '',
-            avatar: user.avatar ?? '',
         });
         setFormError(null);
         setEditOpen(true);
@@ -180,7 +172,11 @@ export function ProfilePage() {
                                         <p className="text-sm font-semibold text-brass-400">
                                             {formatPrice(purchase.amount)}
                                         </p>
-                                        <p className="text-xs text-muted">{purchase.status}</p>
+                                        <p className="text-xs text-muted">
+                                            {purchase.status === 'demo'
+                                                ? 'Демо, без списания'
+                                                : purchase.status}
+                                        </p>
                                     </div>
                                 </div>
                             ))
@@ -273,37 +269,6 @@ export function ProfilePage() {
                             />
                         </Field>
                     </div>
-                    <Field label="Дата рождения" htmlFor="profile-birthdate">
-                        <Input
-                            id="profile-birthdate"
-                            type="date"
-                            value={form.birthdate}
-                            onChange={(event) =>
-                                setForm((current) => ({
-                                    ...current,
-                                    birthdate: event.target.value,
-                                }))
-                            }
-                        />
-                    </Field>
-                    <Field
-                        label="Ссылка на аватар"
-                        htmlFor="profile-avatar"
-                        hint="Необязательно. Прямая ссылка на изображение."
-                    >
-                        <Input
-                            id="profile-avatar"
-                            type="url"
-                            value={form.avatar}
-                            onChange={(event) =>
-                                setForm((current) => ({ ...current, avatar: event.target.value }))
-                            }
-                            placeholder="https://…"
-                        />
-                    </Field>
-                    <p className="text-xs text-muted">
-                        Email и роль меняются только на стороне бэкенда.
-                    </p>
                     {formError && (
                         <p className="rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-sm text-red-200">
                             {formError}

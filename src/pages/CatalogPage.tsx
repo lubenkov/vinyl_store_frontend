@@ -15,15 +15,9 @@ const SORT_OPTIONS = [
     { value: 'name', label: 'Название' },
     { value: 'author', label: 'Исполнитель' },
     { value: 'price', label: 'Цена' },
-    { value: 'id', label: 'ID' },
 ];
 
 const PAGE_SIZES = [8, 12, 24, 48];
-
-const SEARCH_OPTIONS = [
-    { value: 'name', label: 'По названию' },
-    { value: 'author', label: 'По исполнителю' },
-];
 
 function CatalogSkeleton() {
     return (
@@ -48,9 +42,10 @@ export function CatalogPage() {
     const page = Math.max(1, Number(params.get('page') ?? 1) || 1);
     const requestedLimit = Number(params.get('limit') ?? 12);
     const limit = PAGE_SIZES.includes(requestedLimit) ? requestedLimit : 12;
-    const sortBy = params.get('sortBy') ?? 'name';
+    const requestedSortBy = params.get('sortBy');
+    const sortBy =
+        SORT_OPTIONS.find((option) => option.value === requestedSortBy)?.value ?? 'name';
     const order = (params.get('order') === 'DESC' ? 'DESC' : 'ASC') as 'ASC' | 'DESC';
-    const searchBy = params.get('searchBy') ?? 'name';
     const searchTerm = params.get('searchTerm') ?? '';
 
     const [searchInput, setSearchInput] = useState(searchTerm);
@@ -90,7 +85,7 @@ export function CatalogPage() {
     }, [debouncedSearch, searchInput, searchTerm, update]);
 
     const query = useQuery({
-        queryKey: ['vinyls', { page, limit, sortBy, order, searchBy, searchTerm }],
+        queryKey: ['vinyls', { page, limit, sortBy, order, searchTerm }],
         queryFn: async () => {
             const base = {
                 limit,
@@ -99,10 +94,7 @@ export function CatalogPage() {
                 order,
             };
             if (!searchTerm) return api.vinyls.list(base);
-            // «Везде»: сначала по названию, при пустом результате — по исполнителю.
-            if (searchBy === 'author') {
-                return api.vinyls.list({ ...base, searchBy: 'author', searchTerm });
-            }
+            // Ищем сразу по названию и исполнителю: сначала название, затем автор.
             const byName = await api.vinyls.list({ ...base, searchBy: 'name', searchTerm });
             if (byName.count > 0) return byName;
             return api.vinyls.list({ ...base, searchBy: 'author', searchTerm });
@@ -137,15 +129,11 @@ export function CatalogPage() {
 
                 <div className="container-page relative py-14 sm:py-20">
                     <p className="text-xs uppercase tracking-[0.3em] text-brass-400">
-                        Каталог винила
+                        Каталог
                     </p>
                     <h1 className="mt-4 max-w-2xl font-display text-4xl leading-tight text-cream sm:text-6xl">
                         Пластинки, которые хочется слушать целиком
                     </h1>
-                    <p className="mt-5 max-w-xl text-base text-muted">
-                        Отобранный винил с описанием, оценками покупателей и покупкой в пару
-                        кликов. Поиск по названию и исполнителю, сортировка по цене и новизне.
-                    </p>
                     <div className="mt-8 flex flex-wrap items-center gap-3">
                         <a href="#catalog" className="inline-flex h-11 items-center rounded-xl bg-brass-500 px-5 text-sm font-medium text-ink-950 transition hover:bg-brass-400">
                             Смотреть каталог
@@ -172,27 +160,11 @@ export function CatalogPage() {
                                     aria-label="Поиск по каталогу"
                                 />
                             </div>
-                            <div className="flex gap-2">
-                                <Select
-                                    value={searchBy}
-                                    onChange={(event) =>
-                                        update({ searchBy: event.target.value, page: 1 })
-                                    }
-                                    aria-label="Поле поиска"
-                                    className="sm:w-44"
-                                >
-                                    {SEARCH_OPTIONS.map((option) => (
-                                        <option key={option.value} value={option.value}>
-                                            {option.label}
-                                        </option>
-                                    ))}
-                                </Select>
-                                {hasFilters && (
-                                    <Button variant="ghost" size="md" onClick={resetFilters}>
-                                        Сбросить
-                                    </Button>
-                                )}
-                            </div>
+                            {hasFilters && (
+                                <Button variant="ghost" size="md" onClick={resetFilters}>
+                                    Сбросить
+                                </Button>
+                            )}
                         </div>
 
                         <div className="flex flex-wrap items-center gap-2 border-t border-ink-800 pt-4">
@@ -220,7 +192,7 @@ export function CatalogPage() {
                                     update({ order: event.target.value, page: 1 })
                                 }
                                 aria-label="Направление сортировки"
-                                className="w-full sm:w-40"
+                                className="w-full sm:w-48"
                             >
                                 <option value="ASC">По возрастанию</option>
                                 <option value="DESC">По убыванию</option>

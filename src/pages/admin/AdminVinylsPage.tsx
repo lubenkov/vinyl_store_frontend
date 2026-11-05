@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ExternalLink, Pencil, Plus, Trash2 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useToast } from '@/context/ToastContext';
-import { formatPrice } from '@/lib/format';
+import { cleanDescription, formatPrice } from '@/lib/format';
 import { VinylCover } from '@/components/VinylCover';
 import { Button } from '@/components/ui/Button';
 import { Field, Input, Textarea } from '@/components/ui/Form';
@@ -100,7 +100,7 @@ export function AdminVinylsPage() {
         setForm({
             name: vinyl.name,
             author: vinyl.author,
-            description: vinyl.description ?? '',
+            description: cleanDescription(vinyl.description),
             price: String(vinyl.price),
             image: vinyl.image ?? '',
         });

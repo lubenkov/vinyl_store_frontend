@@ -12,7 +12,14 @@ import {
 import { ApiError, api } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
-import { averageScore, formatDate, formatPrice, initials, pluralize } from '@/lib/format';
+import {
+    averageScore,
+    cleanDescription,
+    formatDate,
+    formatPrice,
+    initials,
+    pluralize,
+} from '@/lib/format';
 import { VinylCover } from '@/components/VinylCover';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -81,7 +88,7 @@ export function VinylDetailPage() {
     const location = useLocation();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
-    const { user, isAdmin } = useAuth();
+    const { user, isAdmin, refresh } = useAuth();
     const { notify } = useToast();
 
     const [reviewPage, setReviewPage] = useState(1);
@@ -133,9 +140,10 @@ export function VinylDetailPage() {
 
     const buy = useMutation({
         mutationFn: () => api.purchases.create(vinylId),
-        onSuccess: (data) => {
+        onSuccess: async (data) => {
             setPurchase(data);
-            notify('Заказ создан. Проверьте статус платежа.', 'success');
+            await refresh();
+            notify('Демо-заказ создан и добавлен в покупки.', 'success');
         },
         onError: (error) => notify(error.message, 'error'),
     });
@@ -267,7 +275,7 @@ export function VinylDetailPage() {
                     </div>
 
                     <p className="mt-6 whitespace-pre-line text-base leading-relaxed text-cream/80">
-                        {vinyl.description || 'Описание к этой пластинке пока не добавлено.'}
+                        {cleanDescription(vinyl.description)}
                     </p>
 
                     <div className="mt-8 rounded-2xl border border-ink-700 bg-ink-900/70 p-5">
@@ -407,11 +415,11 @@ export function VinylDetailPage() {
             <Modal
                 open={buyOpen}
                 onClose={() => setBuyOpen(false)}
-                title={purchase ? 'Заказ создан' : 'Оформление покупки'}
+                title={purchase ? 'Демо-заказ создан' : 'Оформление покупки'}
                 description={
                     purchase
-                        ? 'Платёж зарегистрирован на стороне бэкенда.'
-                        : 'Проверьте состав заказа.'
+                        ? 'Заказ добавлен в раздел «Покупки» профиля.'
+                        : 'Оплата демонстрационная: реальные деньги не списываются.'
                 }
                 size="sm"
                 footer={
@@ -434,7 +442,7 @@ export function VinylDetailPage() {
                                 onClick={() => buy.mutate()}
                             >
                                 <CreditCard className="h-4 w-4" />
-                                Оплатить
+                                Оформить
                             </Button>
                         </div>
                     )
@@ -457,13 +465,14 @@ export function VinylDetailPage() {
                         <div className="flex items-center justify-between gap-4">
                             <span className="text-muted">Статус платежа</span>
                             <Badge tone={purchase.status === 'succeeded' ? 'green' : 'brass'}>
-                                {purchase.status}
+                                {purchase.status === 'demo'
+                                    ? 'Демо, без списания'
+                                    : purchase.status}
                             </Badge>
                         </div>
                         <p className="rounded-xl border border-ink-700 bg-ink-850 p-3 text-xs leading-relaxed text-muted">
-                            Бэкенд создаёт PaymentIntent, но не возвращает client_secret.
-                            Поэтому ввод карты на фронтенде не подключён: для реальной оплаты
-                            нужен Stripe Elements и доработка ответа API.
+                            Это демонстрационная оплата: данные карты не запрашиваются, деньги
+                            не списываются. Заказ уже добавлен в раздел «Покупки» профиля.
                         </p>
                     </div>
                 ) : (
@@ -484,9 +493,9 @@ export function VinylDetailPage() {
                                 </p>
                             </div>
                         </div>
-                        <p className="text-xs leading-relaxed text-muted">
-                            Сумма указана в долларах США и берётся из базы данных, а не из
-                            запроса.
+                        <p className="rounded-xl border border-brass-500/20 bg-brass-500/5 p-3 text-xs leading-relaxed text-brass-200">
+                            Оплата демонстрационная: данные карты не запрашиваются, реальные
+                            деньги не списываются. После оформления заказ появится в профиле.
                         </p>
                     </div>
                 )}

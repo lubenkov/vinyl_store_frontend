@@ -11,6 +11,15 @@ export function formatPrice(value: number | string | null | undefined): string {
     return priceFormatter.format(amount);
 }
 
+// Hide seeded demo descriptions until a real description is added.
+const DESCRIPTION_PLACEHOLDER = /^Description for Vinyl \d+\.$/i;
+
+export function cleanDescription(value: string | null | undefined): string {
+    const text = value?.trim();
+    if (!text || DESCRIPTION_PLACEHOLDER.test(text)) return '';
+    return text;
+}
+
 export function formatDate(value: string | null | undefined): string {
     if (!value) return '—';
     const date = new Date(value);
