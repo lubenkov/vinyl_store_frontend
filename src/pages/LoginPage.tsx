@@ -54,6 +54,10 @@ export function LoginPage() {
             setError(
                 'Этот email уже зарегистрирован с паролем. Войдите с помощью пароля.',
             );
+        } else if (code === 'google_email_not_verified') {
+            setError(
+                'У этого Google-аккаунта нет подтверждённого email. Войдите по паролю.',
+            );
         } else if (code === 'google') {
             setError('Не удалось войти через Google. Попробуйте ещё раз.');
         }
