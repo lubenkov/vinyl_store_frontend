@@ -1,5 +1,6 @@
 import { useRef } from 'react';
 import { Star } from 'lucide-react';
+import { useI18n } from '@/context/I18nContext';
 import { cn } from '@/lib/cn';
 
 interface StarsProps {
@@ -11,6 +12,7 @@ interface StarsProps {
 }
 
 export function Stars({ value, size = 16, onChange, className, label }: StarsProps) {
+    const { t } = useI18n();
     const rounded = Math.round(value);
     const interactive = Boolean(onChange);
     const refs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -19,7 +21,12 @@ export function Stars({ value, size = 16, onChange, className, label }: StarsPro
         <div
             className={cn('inline-flex items-center gap-0.5', className)}
             role={interactive ? 'radiogroup' : undefined}
-            aria-label={label ?? (interactive ? 'Оценка' : `Оценка: ${value.toFixed(1)} из 5`)}
+            aria-label={
+                label ??
+                (interactive
+                    ? t('stars.rating')
+                    : t('stars.ratingValue', { value: value.toFixed(1) }))
+            }
         >
             {[1, 2, 3, 4, 5].map((star, index) => {
                 const filled = rounded >= star;
@@ -41,7 +48,7 @@ export function Stars({ value, size = 16, onChange, className, label }: StarsPro
                         type="button"
                         role="radio"
                         aria-checked={value === star}
-                        aria-label={`${star} из 5`}
+                        aria-label={t('stars.star', { star })}
                         tabIndex={star === Math.max(1, Math.round(value || 1)) ? 0 : -1}
                         onClick={() => onChange?.(star)}
                         onKeyDown={(event) => {

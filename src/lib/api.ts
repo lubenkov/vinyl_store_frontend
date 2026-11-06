@@ -1,3 +1,4 @@
+import { getLanguage, translate } from '@/i18n/translations';
 import type {
     AuthResponse,
     CreateReviewInput,
@@ -92,7 +93,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
         });
     } catch (error) {
         if (error instanceof DOMException && error.name === 'AbortError') throw error;
-        throw new ApiError('Не удалось связаться с сервером. Проверьте, запущен ли бэкенд.', 0);
+        throw new ApiError(translate(getLanguage(), 'api.network'), 0);
     }
 
     if (response.status === 204) return undefined as T;
@@ -111,10 +112,11 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
         if (response.status === 401 && token) {
             window.dispatchEvent(new Event(UNAUTHORIZED_EVENT));
         }
+        const language = getLanguage();
         const fallback =
             response.status === 401
-                ? 'Требуется авторизация'
-                : `Ошибка запроса (${response.status})`;
+                ? translate(language, 'api.unauthorized')
+                : translate(language, 'api.requestError', { status: response.status });
         throw new ApiError(extractMessage(data) ?? fallback, response.status);
     }
 

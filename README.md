@@ -21,7 +21,7 @@ Single-page application for an online vinyl record store, written in TypeScript 
 The frontend of a vinyl record shop: a catalog with search, sorting and pagination,
 a record page with reviews and a purchase flow, email/Google sign-in, a customer
 profile, and an admin area for the catalog, Discogs import, Telegram notifications
-and the audit log. The UI copy is Russian.
+and the audit log. The UI is available in English (default) and Russian.
 
 The SPA talks to the separate [vinyl_store](https://github.com/lubenkov/vinyl_store)
 REST API. This repository contains no server code and no secrets.
@@ -41,13 +41,15 @@ REST API. This repository contains no server code and no secrets.
 | Logs           | view the backend audit log and filter it client-side                                                   |
 | UX             | responsive dark theme, skeleton/empty/error states, toasts and focus-trapped modals                    |
 | Security       | CSP and security headers in `vercel.json`; no secrets are shipped in the bundle                       |
+| Localization   | English by default, Russian via the header switch; dates, prices and plurals follow the language       |
 
 ## How the code is organised
 
 | File / directory          | Responsibility                                                                 |
 | :------------------------ | :----------------------------------------------------------------------------- |
 | `src/components/`         | shared UI kit, layout, record cards, cover placeholder and protected routes    |
-| `src/context/`            | auth/session and toast providers                                               |
+| `src/context/`            | auth/session, localization and toast providers                                 |
+| `src/i18n/`               | English/Russian dictionaries, interpolation and plural rules                   |
 | `src/lib/`                | API client, query client, formatting, debounce, OAuth helpers and class names  |
 | `src/pages/`              | catalog, record, auth, profile and 404 pages                                   |
 | `src/pages/admin/`        | nested admin area: records, Discogs, Telegram and logs                         |
@@ -226,8 +228,8 @@ of a cold start.
 
 ## Tests
 
-`npm test` runs 1 suite with 9 tests: price formatting, Russian pluralisation,
-average review score and `ApiError`. CI
+`npm test` runs 2 suites with 14 tests: price formatting, Russian pluralisation,
+average review score, `ApiError`, and English/Russian translation lookups. CI
 (`.github/workflows/ci.yml`) runs `typecheck`, `lint`, `test` and `build` on every
 push and pull request to `master` using Node.js 20.
 
@@ -244,7 +246,8 @@ MIT — see [LICENSE](./LICENSE).
 Tailwind CSS. Каталог с поиском, сортировкой и пагинацией, карточка пластинки с
 отзывами и покупкой, вход по email и через Google, профиль с историей покупок и
 отзывов, админ-панель для CRUD каталога, импорта из Discogs, отправки в Telegram и
-журнала действий.
+журнала действий. Английский язык включён по умолчанию, русский — по переключателю
+в шапке.
 
 **Запуск:** запустить бэкенд `vinyl_store` на `http://localhost:3000` →
 `npm install` → `npm run dev` → открыть `http://localhost:5173`.

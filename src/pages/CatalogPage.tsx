@@ -4,18 +4,12 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { Disc3, Search, SlidersHorizontal } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
-import { pluralize } from '@/lib/format';
+import { useI18n } from '@/context/I18nContext';
 import { VinylCard } from '@/components/VinylCard';
 import { Button } from '@/components/ui/Button';
 import { Input, Select } from '@/components/ui/Form';
 import { Pagination } from '@/components/ui/Pagination';
 import { EmptyState, ErrorState } from '@/components/ui/States';
-
-const SORT_OPTIONS = [
-    { value: 'name', label: 'Название' },
-    { value: 'author', label: 'Исполнитель' },
-    { value: 'price', label: 'Цена' },
-];
 
 const PAGE_SIZES = [8, 12, 24, 48];
 
@@ -37,14 +31,21 @@ function CatalogSkeleton() {
 }
 
 export function CatalogPage() {
+    const { t } = useI18n();
     const [params, setParams] = useSearchParams();
+
+    const sortOptions = [
+        { value: 'name', label: t('catalog.sortName') },
+        { value: 'author', label: t('catalog.sortAuthor') },
+        { value: 'price', label: t('catalog.sortPrice') },
+    ];
 
     const page = Math.max(1, Number(params.get('page') ?? 1) || 1);
     const requestedLimit = Number(params.get('limit') ?? 12);
     const limit = PAGE_SIZES.includes(requestedLimit) ? requestedLimit : 12;
     const requestedSortBy = params.get('sortBy');
     const sortBy =
-        SORT_OPTIONS.find((option) => option.value === requestedSortBy)?.value ?? 'name';
+        sortOptions.find((option) => option.value === requestedSortBy)?.value ?? 'name';
     const order = (params.get('order') === 'DESC' ? 'DESC' : 'ASC') as 'ASC' | 'DESC';
     const searchTerm = params.get('searchTerm') ?? '';
 
@@ -107,10 +108,10 @@ export function CatalogPage() {
     const hasFilters = Boolean(searchTerm);
 
     const summary = useMemo(() => {
-        if (query.isLoading) return 'Загружаем каталог…';
-        if (query.isError) return 'Каталог недоступен';
-        return `Найдено ${total} ${pluralize(total, ['пластинка', 'пластинки', 'пластинок'])}`;
-    }, [query.isLoading, query.isError, total]);
+        if (query.isLoading) return t('catalog.loading');
+        if (query.isError) return t('catalog.unavailable');
+        return t('catalog.found', { count: total });
+    }, [query.isLoading, query.isError, total, t]);
 
     const resetFilters = () => {
         setSearchInput('');
@@ -129,18 +130,18 @@ export function CatalogPage() {
 
                 <div className="container-page relative py-14 sm:py-20">
                     <p className="text-xs uppercase tracking-[0.3em] text-brass-400">
-                        Каталог
+                        {t('catalog.eyebrow')}
                     </p>
                     <h1 className="mt-4 max-w-2xl font-display text-4xl leading-tight text-cream sm:text-6xl">
-                        Пластинки, которые хочется слушать целиком
+                        {t('catalog.heroTitle')}
                     </h1>
                     <div className="mt-8 flex flex-wrap items-center gap-3">
                         <a href="#catalog" className="inline-flex h-11 items-center rounded-xl bg-brass-500 px-5 text-sm font-medium text-ink-950 transition hover:bg-brass-400">
-                            Смотреть каталог
+                            {t('catalog.viewCatalog')}
                         </a>
                         <span className="inline-flex items-center gap-2 text-sm text-muted">
                             <Disc3 className="h-4 w-4 text-brass-500" />
-                            Отобранный винил с отзывами
+                            {t('catalog.heroNote')}
                         </span>
                     </div>
                 </div>
@@ -155,14 +156,14 @@ export function CatalogPage() {
                                 <Input
                                     value={searchInput}
                                     onChange={(event) => setSearchInput(event.target.value)}
-                                    placeholder="Найти пластинку или исполнителя…"
+                                    placeholder={t('catalog.searchPlaceholder')}
                                     className="pl-10"
-                                    aria-label="Поиск по каталогу"
+                                    aria-label={t('catalog.searchAria')}
                                 />
                             </div>
                             {hasFilters && (
                                 <Button variant="ghost" size="md" onClick={resetFilters}>
-                                    Сбросить
+                                    {t('catalog.reset')}
                                 </Button>
                             )}
                         </div>
@@ -170,17 +171,17 @@ export function CatalogPage() {
                         <div className="flex flex-wrap items-center gap-2 border-t border-ink-800 pt-4">
                             <span className="mr-1 inline-flex items-center gap-1.5 text-xs uppercase tracking-wider text-muted">
                                 <SlidersHorizontal className="h-3.5 w-3.5" />
-                                Сортировка
+                                {t('catalog.sort')}
                             </span>
                             <Select
                                 value={sortBy}
                                 onChange={(event) =>
                                     update({ sortBy: event.target.value, page: 1 })
                                 }
-                                aria-label="Сортировать по"
+                                aria-label={t('catalog.sortBy')}
                                 className="w-full sm:w-44"
                             >
-                                {SORT_OPTIONS.map((option) => (
+                                {sortOptions.map((option) => (
                                     <option key={option.value} value={option.value}>
                                         {option.label}
                                     </option>
@@ -191,11 +192,11 @@ export function CatalogPage() {
                                 onChange={(event) =>
                                     update({ order: event.target.value, page: 1 })
                                 }
-                                aria-label="Направление сортировки"
+                                aria-label={t('catalog.sortDirection')}
                                 className="w-full sm:w-48"
                             >
-                                <option value="ASC">По возрастанию</option>
-                                <option value="DESC">По убыванию</option>
+                                <option value="ASC">{t('catalog.orderAsc')}</option>
+                                <option value="DESC">{t('catalog.orderDesc')}</option>
                             </Select>
                             <span className="ml-auto text-sm text-muted">{summary}</span>
                         </div>
@@ -210,22 +211,22 @@ export function CatalogPage() {
                             message={
                                 query.error instanceof Error
                                     ? query.error.message
-                                    : 'Не удалось загрузить каталог'
+                                    : t('catalog.loadError')
                             }
                             onRetry={() => void query.refetch()}
                         />
                     ) : rows.length === 0 ? (
                         <EmptyState
-                            title="Ничего не нашлось"
+                            title={t('catalog.emptyTitle')}
                             description={
                                 hasFilters
-                                    ? 'Попробуйте изменить запрос или сбросить фильтры.'
-                                    : 'Каталог пока пуст. Запустите сидер на бэкенде или добавьте пластинки в админке.'
+                                    ? t('catalog.emptyFilter')
+                                    : t('catalog.emptyCatalog')
                             }
                             action={
                                 hasFilters ? (
                                     <Button variant="secondary" onClick={resetFilters}>
-                                        Сбросить фильтры
+                                        {t('catalog.resetFilters')}
                                     </Button>
                                 ) : undefined
                             }
@@ -257,14 +258,14 @@ export function CatalogPage() {
                             }}
                         />
                         <div className="flex items-center gap-2 text-sm text-muted">
-                            <span>На странице:</span>
+                            <span>{t('catalog.perPage')}</span>
                             <Select
                                 value={limit}
                                 onChange={(event) =>
                                     update({ limit: event.target.value, page: 1 })
                                 }
                                 className="h-9 w-auto py-0 text-sm"
-                                aria-label="Количество пластинок на странице"
+                                aria-label={t('catalog.perPageAria')}
                             >
                                 {PAGE_SIZES.map((size) => (
                                     <option key={size} value={size}>

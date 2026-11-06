@@ -4,8 +4,9 @@ import { useMutation } from '@tanstack/react-query';
 import { CalendarDays, Mail, Pencil, Receipt, ShieldCheck, Trash2, UserRound } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
+import { useI18n } from '@/context/I18nContext';
 import { useToast } from '@/context/ToastContext';
-import { formatDate, formatDateTime, formatPrice, initials } from '@/lib/format';
+import { initials } from '@/lib/format';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Field, Input } from '@/components/ui/Form';
@@ -19,6 +20,7 @@ interface ProfileForm {
 
 export function ProfilePage() {
     const { user, refresh, signOut } = useAuth();
+    const { t, formatPrice, formatDate, formatDateTime } = useI18n();
     const { notify } = useToast();
     const navigate = useNavigate();
 
@@ -39,7 +41,7 @@ export function ProfilePage() {
         onSuccess: async () => {
             await refresh();
             setEditOpen(false);
-            notify('Профиль обновлён.', 'success');
+            notify(t('profile.updated'), 'success');
         },
         onError: (error) => setFormError(error.message),
     });
@@ -48,7 +50,7 @@ export function ProfilePage() {
         mutationFn: api.users.remove,
         onSuccess: () => {
             signOut();
-            notify('Аккаунт удалён.', 'success');
+            notify(t('profile.deleted'), 'success');
             navigate('/');
         },
         onError: (error) => notify(error.message, 'error'),
@@ -69,7 +71,7 @@ export function ProfilePage() {
         event.preventDefault();
         setFormError(null);
         if (!form.firstName.trim() || !form.lastName.trim()) {
-            setFormError('Имя и фамилия обязательны.');
+            setFormError(t('profile.nameRequired'));
             return;
         }
         updateProfile.mutate();
@@ -106,12 +108,12 @@ export function ProfilePage() {
                                 {user.role === 'admin' ? (
                                     <>
                                         <ShieldCheck className="h-3 w-3" />
-                                        Администратор
+                                        {t('profile.admin')}
                                     </>
                                 ) : (
                                     <>
                                         <UserRound className="h-3 w-3" />
-                                        Покупатель
+                                        {t('profile.customer')}
                                     </>
                                 )}
                             </Badge>
@@ -128,11 +130,11 @@ export function ProfilePage() {
                 <div className="flex flex-wrap gap-2">
                     <Button variant="secondary" onClick={openEditor}>
                         <Pencil className="h-4 w-4" />
-                        Редактировать
+                        {t('common.edit')}
                     </Button>
                     <Button variant="ghost" onClick={() => setDeleteOpen(true)}>
                         <Trash2 className="h-4 w-4" />
-                        Удалить аккаунт
+                        {t('profile.deleteAccount')}
                     </Button>
                 </div>
             </div>
@@ -140,13 +142,15 @@ export function ProfilePage() {
             <div className="mt-10 grid gap-6 lg:grid-cols-2">
                 <section className="card p-5">
                     <div className="flex items-center justify-between gap-3">
-                        <h2 className="font-display text-xl text-cream">Покупки</h2>
+                        <h2 className="font-display text-xl text-cream">
+                            {t('profile.purchases')}
+                        </h2>
                         <span className="text-sm text-muted">{purchases.length}</span>
                     </div>
                     <div className="mt-4 space-y-3">
                         {purchases.length === 0 ? (
                             <p className="rounded-xl border border-dashed border-ink-700 px-4 py-6 text-center text-sm text-muted">
-                                Покупок пока нет.
+                                {t('profile.noPurchases')}
                             </p>
                         ) : (
                             purchases.map((purchase) => (
@@ -160,8 +164,10 @@ export function ProfilePage() {
                                         </span>
                                         <div>
                                             <p className="text-sm text-cream">
-                                                Заказ #{purchase.id} · пластинка #
-                                                {purchase.vinylId}
+                                                {t('profile.orderLine', {
+                                                    id: purchase.id,
+                                                    vinylId: purchase.vinylId,
+                                                })}
                                             </p>
                                             <p className="text-xs text-muted">
                                                 {formatDateTime(purchase.createdAt)}
@@ -174,7 +180,7 @@ export function ProfilePage() {
                                         </p>
                                         <p className="text-xs text-muted">
                                             {purchase.status === 'demo'
-                                                ? 'Демо, без списания'
+                                                ? t('common.demoNoCharge')
                                                 : purchase.status}
                                         </p>
                                     </div>
@@ -186,13 +192,15 @@ export function ProfilePage() {
 
                 <section className="card p-5">
                     <div className="flex items-center justify-between gap-3">
-                        <h2 className="font-display text-xl text-cream">Мои отзывы</h2>
+                        <h2 className="font-display text-xl text-cream">
+                            {t('profile.myReviews')}
+                        </h2>
                         <span className="text-sm text-muted">{reviews.length}</span>
                     </div>
                     <div className="mt-4 space-y-3">
                         {reviews.length === 0 ? (
                             <p className="rounded-xl border border-dashed border-ink-700 px-4 py-6 text-center text-sm text-muted">
-                                Вы ещё не оставили ни одного отзыва.
+                                {t('profile.noReviews')}
                             </p>
                         ) : (
                             reviews.map((review) => (
@@ -219,7 +227,7 @@ export function ProfilePage() {
             <Modal
                 open={editOpen}
                 onClose={() => setEditOpen(false)}
-                title="Редактировать профиль"
+                title={t('profile.editTitle')}
                 footer={
                     <div className="flex gap-3">
                         <Button
@@ -227,7 +235,7 @@ export function ProfilePage() {
                             className="flex-1"
                             onClick={() => setEditOpen(false)}
                         >
-                            Отмена
+                            {t('common.cancel')}
                         </Button>
                         <Button
                             className="flex-1"
@@ -235,14 +243,14 @@ export function ProfilePage() {
                             type="submit"
                             loading={updateProfile.isPending}
                         >
-                            Сохранить
+                            {t('common.save')}
                         </Button>
                     </div>
                 }
             >
                 <form id="profile-form" className="space-y-4" onSubmit={handleSubmit}>
                     <div className="grid gap-4 sm:grid-cols-2">
-                        <Field label="Имя" htmlFor="profile-first-name">
+                        <Field label={t('profile.firstName')} htmlFor="profile-first-name">
                             <Input
                                 id="profile-first-name"
                                 value={form.firstName}
@@ -255,7 +263,7 @@ export function ProfilePage() {
                                 required
                             />
                         </Field>
-                        <Field label="Фамилия" htmlFor="profile-last-name">
+                        <Field label={t('profile.lastName')} htmlFor="profile-last-name">
                             <Input
                                 id="profile-last-name"
                                 value={form.lastName}
@@ -280,7 +288,7 @@ export function ProfilePage() {
             <Modal
                 open={deleteOpen}
                 onClose={() => setDeleteOpen(false)}
-                title="Удалить аккаунт?"
+                title={t('profile.deleteTitle')}
                 size="sm"
                 footer={
                     <div className="flex gap-3">
@@ -289,7 +297,7 @@ export function ProfilePage() {
                             className="flex-1"
                             onClick={() => setDeleteOpen(false)}
                         >
-                            Отмена
+                            {t('common.cancel')}
                         </Button>
                         <Button
                             variant="danger"
@@ -297,14 +305,13 @@ export function ProfilePage() {
                             loading={deleteProfile.isPending}
                             onClick={() => deleteProfile.mutate()}
                         >
-                            Удалить
+                            {t('common.delete')}
                         </Button>
                     </div>
                 }
             >
                 <p className="text-sm leading-relaxed text-muted">
-                    Аккаунт, отзывы и история покупок будут удалены без возможности
-                    восстановления. Это действие необратимо.
+                    {t('profile.deleteBody')}
                 </p>
             </Modal>
         </div>

@@ -1,14 +1,59 @@
 import type { Review } from '@/types/api';
+import type { Language } from '@/i18n/translations';
 
-const priceFormatter = new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-});
+const priceFormatters: Record<Language, Intl.NumberFormat> = {
+    en: new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+    }),
+    ru: new Intl.NumberFormat('ru-RU', {
+        style: 'currency',
+        currency: 'USD',
+    }),
+};
 
-export function formatPrice(value: number | string | null | undefined): string {
+const locales: Record<Language, string> = {
+    en: 'en-US',
+    ru: 'ru-RU',
+};
+
+const dateFormatters: Record<Language, Intl.DateTimeFormat> = {
+    en: new Intl.DateTimeFormat(locales.en, {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+    }),
+    ru: new Intl.DateTimeFormat(locales.ru, {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+    }),
+};
+
+const dateTimeFormatters: Record<Language, Intl.DateTimeFormat> = {
+    en: new Intl.DateTimeFormat(locales.en, {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+    }),
+    ru: new Intl.DateTimeFormat(locales.ru, {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+    }),
+};
+
+export function formatPrice(
+    value: number | string | null | undefined,
+    language: Language = 'en',
+): string {
     const amount = Number(value);
     if (!Number.isFinite(amount)) return '—';
-    return priceFormatter.format(amount);
+    return priceFormatters[language].format(amount);
 }
 
 // Hide seeded demo descriptions until a real description is added.
@@ -20,28 +65,24 @@ export function cleanDescription(value: string | null | undefined): string {
     return text;
 }
 
-export function formatDate(value: string | null | undefined): string {
+export function formatDate(
+    value: string | null | undefined,
+    language: Language = 'en',
+): string {
     if (!value) return '—';
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return '—';
-    return date.toLocaleDateString('ru-RU', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-    });
+    return dateFormatters[language].format(date);
 }
 
-export function formatDateTime(value: string | null | undefined): string {
+export function formatDateTime(
+    value: string | null | undefined,
+    language: Language = 'en',
+): string {
     if (!value) return '—';
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return '—';
-    return date.toLocaleString('ru-RU', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-    });
+    return dateTimeFormatters[language].format(date);
 }
 
 export function initials(firstName?: string | null, lastName?: string | null): string {

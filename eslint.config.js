@@ -23,7 +23,7 @@ export default tseslint.config(
                 'warn',
                 {
                     allowConstantExport: true,
-                    allowExportNames: ['useAuth', 'useToast', 'buttonStyles'],
+                    allowExportNames: ['useAuth', 'useI18n', 'useToast', 'buttonStyles'],
                 },
             ],
         },

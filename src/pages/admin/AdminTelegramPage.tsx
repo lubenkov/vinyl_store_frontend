@@ -2,8 +2,8 @@ import { useMemo, useState, type FormEvent } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Disc3, Send } from 'lucide-react';
 import { api } from '@/lib/api';
+import { useI18n } from '@/context/I18nContext';
 import { useToast } from '@/context/ToastContext';
-import { formatPrice } from '@/lib/format';
 import { Button } from '@/components/ui/Button';
 import { Field, Select } from '@/components/ui/Form';
 
@@ -17,6 +17,7 @@ function getLinkOrigin() {
 }
 
 export function AdminTelegramPage() {
+    const { t, formatPrice } = useI18n();
     const { notify } = useToast();
     const [vinylId, setVinylId] = useState('');
     const [error, setError] = useState<string | null>(null);
@@ -43,7 +44,7 @@ export function AdminTelegramPage() {
 
     const sendVinyl = useMutation({
         mutationFn: () => {
-            if (!selectedVinyl) throw new Error('Выберите пластинку.');
+            if (!selectedVinyl) throw new Error(t('adminTelegram.selectRequired'));
             return api.telegram.sendVinyl({
                 name: selectedVinyl.name,
                 link: vinylLink,
@@ -51,7 +52,7 @@ export function AdminTelegramPage() {
             });
         },
         onSuccess: () => {
-            notify('Карточка отправлена в Telegram.', 'success');
+            notify(t('adminTelegram.sent'), 'success');
             setVinylId('');
             setError(null);
         },
@@ -63,13 +64,13 @@ export function AdminTelegramPage() {
         setError(null);
 
         if (!selectedVinyl) {
-            setError('Выберите пластинку из списка.');
+            setError(t('adminTelegram.selectFromList'));
             return;
         }
 
         const price = Number(selectedVinyl.price);
         if (!Number.isFinite(price) || price < 0) {
-            setError('У выбранной пластинки некорректная цена.');
+            setError(t('adminTelegram.invalidPrice'));
             return;
         }
 
@@ -79,16 +80,15 @@ export function AdminTelegramPage() {
     const listError = vinylsQuery.isError
         ? vinylsQuery.error instanceof Error
             ? vinylsQuery.error.message
-            : 'Не удалось загрузить каталог.'
+            : t('adminTelegram.loadError')
         : null;
 
     return (
         <section className="space-y-6">
             <div>
-                <h2 className="section-title">Уведомление в Telegram</h2>
+                <h2 className="section-title">{t('adminTelegram.title')}</h2>
                 <p className="mt-1 max-w-2xl text-sm text-muted">
-                    Выберите пластинку из каталога — название, ссылка и цена подставятся
-                    автоматически. Сообщение уходит через Bot API на стороне бэкенда.
+                    {t('adminTelegram.description')}
                 </p>
             </div>
 
@@ -97,9 +97,9 @@ export function AdminTelegramPage() {
                 className="grid gap-4 rounded-2xl border border-ink-700 bg-ink-900/60 p-5 sm:max-w-2xl"
             >
                 <Field
-                    label="Пластинка"
+                    label={t('adminTelegram.record')}
                     htmlFor="telegram-vinyl"
-                    hint="Ссылка ведёт на страницу выбранной пластинки на этом сайте."
+                    hint={t('adminTelegram.linkHint')}
                 >
                     <Select
                         id="telegram-vinyl"
@@ -113,10 +113,10 @@ export function AdminTelegramPage() {
                     >
                         <option value="">
                             {vinylsQuery.isLoading
-                                ? 'Загружаем каталог…'
+                                ? t('adminTelegram.loadingCatalog')
                                 : vinyls.length === 0
-                                  ? 'В каталоге нет пластинок'
-                                  : 'Выберите пластинку…'}
+                                  ? t('adminTelegram.emptyCatalog')
+                                  : t('adminTelegram.selectPlaceholder')}
                         </option>
                         {vinyls.map((vinyl) => (
                             <option key={vinyl.id} value={vinyl.id}>
@@ -160,8 +160,11 @@ export function AdminTelegramPage() {
 
                 <div className="flex items-center justify-between gap-3">
                     <p className="text-xs text-muted">
-                        Нужны <code className="text-cream/80">TELEGRAM_BOT_TOKEN</code> и{' '}
-                        <code className="text-cream/80">TELEGRAM_CHAT_ID</code> в .env бэкенда.
+                        {t('adminTelegram.envPrefix')}{' '}
+                        <code className="text-cream/80">TELEGRAM_BOT_TOKEN</code>{' '}
+                        {t('adminDiscogs.and')}{' '}
+                        <code className="text-cream/80">TELEGRAM_CHAT_ID</code>{' '}
+                        {t('adminTelegram.envSuffix')}
                     </p>
                     <Button
                         type="submit"
@@ -169,7 +172,7 @@ export function AdminTelegramPage() {
                         disabled={!selectedVinyl || Boolean(listError)}
                     >
                         <Send className="h-4 w-4" />
-                        Отправить
+                        {t('adminTelegram.send')}
                     </Button>
                 </div>
             </form>

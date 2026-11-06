@@ -1,11 +1,13 @@
 import { Link } from 'react-router-dom';
 import { MessageSquare } from 'lucide-react';
+import { useI18n } from '@/context/I18nContext';
 import { VinylCover } from '@/components/VinylCover';
 import { Stars } from '@/components/ui/Stars';
-import { averageScore, formatPrice, pluralize } from '@/lib/format';
+import { averageScore } from '@/lib/format';
 import type { Vinyl } from '@/types/api';
 
 export function VinylCard({ vinyl }: { vinyl: Vinyl }) {
+    const { t, formatPrice } = useI18n();
     const score = averageScore(vinyl.reviews);
     const reviewCount = vinyl.reviews?.length ?? 0;
 
@@ -17,7 +19,7 @@ export function VinylCard({ vinyl }: { vinyl: Vinyl }) {
             <VinylCover vinyl={vinyl} rounded={false} />
             <div className="flex flex-1 flex-col p-4">
                 <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted">
-                    {vinyl.author || 'Неизвестный исполнитель'}
+                    {vinyl.author || t('common.unknownArtist')}
                 </p>
                 <h3 className="mt-1 line-clamp-2 font-display text-lg leading-snug text-cream">
                     {vinyl.name}
@@ -36,8 +38,8 @@ export function VinylCard({ vinyl }: { vinyl: Vinyl }) {
                         <span className="flex items-center gap-1 text-xs text-muted/70">
                             <MessageSquare className="h-3.5 w-3.5" />
                             {reviewCount === 0
-                                ? 'без отзывов'
-                                : `${reviewCount} ${pluralize(reviewCount, ['отзыв', 'отзыва', 'отзывов'])}`}
+                                ? t('common.noReviewsShort')
+                                : t('common.reviewsCount', { count: reviewCount })}
                         </span>
                     )}
                 </div>

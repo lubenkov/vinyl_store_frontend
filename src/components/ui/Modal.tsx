@@ -1,5 +1,6 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import { X } from 'lucide-react';
+import { useI18n } from '@/context/I18nContext';
 import { cn } from '@/lib/cn';
 
 interface ModalProps {
@@ -22,6 +23,7 @@ const FOCUSABLE =
     'a[href], button:not([disabled]), textarea, input:not([type="hidden"]), select, [tabindex]:not([tabindex="-1"])';
 
 export function Modal({ open, onClose, title, description, children, footer, size = 'md' }: ModalProps) {
+    const { t } = useI18n();
     const panelRef = useRef<HTMLDivElement>(null);
     const onCloseRef = useRef(onClose);
 
@@ -109,7 +111,7 @@ export function Modal({ open, onClose, title, description, children, footer, siz
                         type="button"
                         onClick={onClose}
                         className="rounded-lg p-1.5 text-muted transition hover:bg-ink-800 hover:text-cream"
-                        aria-label="Закрыть"
+                        aria-label={t('modal.close')}
                     >
                         <X className="h-5 w-5" />
                     </button>

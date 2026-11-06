@@ -1,5 +1,6 @@
 import { apiUrl } from '@/lib/api';
 import { OAUTH_STATE_KEY, createOAuthState } from '@/lib/oauth';
+import { useI18n } from '@/context/I18nContext';
 import { buttonStyles } from '@/components/ui/Button';
 
 function GoogleIcon() {
@@ -32,10 +33,12 @@ interface GoogleAuthButtonProps {
 }
 
 export function GoogleAuthButton({
-    label = 'Продолжить с Google',
+    label,
     className,
     onError,
 }: GoogleAuthButtonProps) {
+    const { t } = useI18n();
+
     const handleClick = () => {
         try {
             const state = createOAuthState();
@@ -44,7 +47,7 @@ export function GoogleAuthButton({
                 `${apiUrl('/auth/google')}?state=${encodeURIComponent(state)}`,
             );
         } catch {
-            onError?.('Браузер не позволяет начать вход через Google.');
+            onError?.(t('google.browserBlocked'));
         }
     };
 
@@ -55,7 +58,7 @@ export function GoogleAuthButton({
             className={buttonStyles('secondary', 'md', className)}
         >
             <GoogleIcon />
-            {label}
+            {label ?? t('auth.googleContinue')}
         </button>
     );
 }

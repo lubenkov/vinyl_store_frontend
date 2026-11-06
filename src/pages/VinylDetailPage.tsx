@@ -11,15 +11,9 @@ import {
 } from 'lucide-react';
 import { ApiError, api } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
+import { useI18n } from '@/context/I18nContext';
 import { useToast } from '@/context/ToastContext';
-import {
-    averageScore,
-    cleanDescription,
-    formatDate,
-    formatPrice,
-    initials,
-    pluralize,
-} from '@/lib/format';
+import { averageScore, cleanDescription, initials } from '@/lib/format';
 import { VinylCover } from '@/components/VinylCover';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -42,6 +36,8 @@ function ReviewItem({
     onDelete: (id: number) => void;
     deleting: boolean;
 }) {
+    const { t, formatDate } = useI18n();
+
     return (
         <article className="rounded-2xl border border-ink-700 bg-ink-900/60 p-4 sm:p-5">
             <div className="flex items-start justify-between gap-4">
@@ -55,7 +51,7 @@ function ReviewItem({
                         <p className="text-sm font-medium text-cream">
                             {review.user
                                 ? `${review.user.firstName} ${review.user.lastName}`
-                                : `Пользователь #${review.userId}`}
+                                : t('vinyl.user', { id: review.userId })}
                         </p>
                         <p className="text-xs text-muted">{formatDate(review.createdAt)}</p>
                     </div>
@@ -68,7 +64,7 @@ function ReviewItem({
                             onClick={() => onDelete(review.id)}
                             disabled={deleting}
                             className="rounded-lg p-1.5 text-muted transition hover:bg-red-500/10 hover:text-red-400 disabled:opacity-50"
-                            aria-label="Удалить отзыв"
+                            aria-label={t('vinyl.deleteReview')}
                         >
                             <Trash2 className="h-4 w-4" />
                         </button>
@@ -89,6 +85,7 @@ export function VinylDetailPage() {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const { user, isAdmin, refresh } = useAuth();
+    const { t, formatPrice } = useI18n();
     const { notify } = useToast();
 
     const [reviewPage, setReviewPage] = useState(1);
@@ -119,7 +116,7 @@ export function VinylDetailPage() {
     const addReview = useMutation({
         mutationFn: (input: CreateReviewInput) => api.vinyls.addReview(vinylId, input),
         onSuccess: () => {
-            notify('Спасибо! Отзыв опубликован.', 'success');
+            notify(t('vinyl.reviewPublished'), 'success');
             setContent('');
             setScore(0);
             setReviewPage(1);
@@ -131,7 +128,7 @@ export function VinylDetailPage() {
     const deleteReview = useMutation({
         mutationFn: (reviewId: number) => api.reviews.remove(reviewId),
         onSuccess: () => {
-            notify('Отзыв удалён.', 'success');
+            notify(t('vinyl.reviewDeleted'), 'success');
             setReviewToDelete(null);
             invalidateReviews();
         },
@@ -143,7 +140,7 @@ export function VinylDetailPage() {
         onSuccess: async (data) => {
             setPurchase(data);
             await refresh();
-            notify('Демо-заказ создан и добавлен в покупки.', 'success');
+            notify(t('vinyl.demoOrderCreated'), 'success');
         },
         onError: (error) => notify(error.message, 'error'),
     });
@@ -152,11 +149,11 @@ export function VinylDetailPage() {
         return (
             <div className="container-page py-16">
                 <EmptyState
-                    title="Пластинка не найдена"
-                    description="В адресе страницы указан некорректный идентификатор."
+                    title={t('vinyl.notFoundTitle')}
+                    description={t('vinyl.invalidId')}
                     action={
                         <Link to="/">
-                            <Button variant="secondary">Вернуться в каталог</Button>
+                            <Button variant="secondary">{t('vinyl.backToCatalog')}</Button>
                         </Link>
                     }
                 />
@@ -179,17 +176,17 @@ export function VinylDetailPage() {
             <div className="container-page py-16">
                 {notFound ? (
                     <EmptyState
-                        title="Пластинка не найдена"
-                        description="Возможно, запись удалили из каталога."
+                        title={t('vinyl.notFoundTitle')}
+                        description={t('vinyl.removed')}
                         action={
                             <Link to="/">
-                                <Button variant="secondary">Вернуться в каталог</Button>
+                                <Button variant="secondary">{t('vinyl.backToCatalog')}</Button>
                             </Link>
                         }
                     />
                 ) : (
                     <ErrorState
-                        message={error instanceof Error ? error.message : 'Ошибка загрузки'}
+                        message={error instanceof Error ? error.message : t('common.loadError')}
                         onRetry={() => void vinylQuery.refetch()}
                     />
                 )}
@@ -217,11 +214,11 @@ export function VinylDetailPage() {
     const submitReview = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         if (score < 1) {
-            notify('Поставьте оценку от 1 до 5.', 'error');
+            notify(t('vinyl.rate'), 'error');
             return;
         }
         if (content.trim().length < 3) {
-            notify('Напишите хотя бы пару слов об этой пластинке.', 'error');
+            notify(t('vinyl.reviewMin'), 'error');
             return;
         }
         addReview.mutate({ score, content: content.trim() });
@@ -229,9 +226,12 @@ export function VinylDetailPage() {
 
     return (
         <div className="container-page py-8 sm:py-12">
-            <nav className="mb-6 flex flex-wrap items-center gap-1.5 text-sm text-muted" aria-label="Хлебные крошки">
+            <nav
+                className="mb-6 flex flex-wrap items-center gap-1.5 text-sm text-muted"
+                aria-label={t('vinyl.breadcrumbs')}
+            >
                 <Link to="/" className="transition hover:text-cream">
-                    Каталог
+                    {t('nav.catalog')}
                 </Link>
                 <span>/</span>
                 <span className="truncate text-cream/80">{vinyl.name}</span>
@@ -243,14 +243,14 @@ export function VinylDetailPage() {
                         <VinylCover vinyl={vinyl} eager />
                     </div>
                     <div className="mt-4 flex items-center justify-between rounded-xl border border-ink-800 bg-ink-900/50 px-4 py-3 text-sm">
-                        <span className="text-muted">Позиция в каталоге</span>
+                        <span className="text-muted">{t('vinyl.position')}</span>
                         <span className="font-mono text-cream/80">#{vinyl.id}</span>
                     </div>
                 </div>
 
                 <div className="min-w-0">
                     <p className="text-sm uppercase tracking-[0.18em] text-brass-400">
-                        {vinyl.author || 'Неизвестный исполнитель'}
+                        {vinyl.author || t('common.unknownArtist')}
                     </p>
                     <h1 className="mt-2 font-display text-3xl leading-tight text-cream sm:text-5xl">
                         {vinyl.name}
@@ -264,14 +264,13 @@ export function VinylDetailPage() {
                                     {scoreAverage.toFixed(1)}
                                 </span>
                                 <span className="text-sm text-muted">
-                                    · {reviewCount}{' '}
-                                    {pluralize(reviewCount, ['отзыв', 'отзыва', 'отзывов'])}
+                                    · {t('common.reviewsCount', { count: reviewCount })}
                                 </span>
                             </span>
                         ) : (
-                            <Badge tone="neutral">Пока без отзывов</Badge>
+                            <Badge tone="neutral">{t('common.noReviews')}</Badge>
                         )}
-                        <Badge tone="brass">Винил</Badge>
+                        <Badge tone="brass">{t('common.vinyl')}</Badge>
                     </div>
 
                     <p className="mt-6 whitespace-pre-line text-base leading-relaxed text-cream/80">
@@ -281,27 +280,28 @@ export function VinylDetailPage() {
                     <div className="mt-8 rounded-2xl border border-ink-700 bg-ink-900/70 p-5">
                         <div className="flex flex-wrap items-end justify-between gap-4">
                             <div>
-                                <p className="text-xs uppercase tracking-wider text-muted">Цена</p>
+                                <p className="text-xs uppercase tracking-wider text-muted">
+                                    {t('vinyl.price')}
+                                </p>
                                 <p className="mt-1 font-display text-3xl text-brass-400">
                                     {formatPrice(vinyl.price)}
                                 </p>
                             </div>
                             <Button size="lg" onClick={handleBuyClick}>
                                 <ShoppingBag className="h-5 w-5" />
-                                {user ? 'Купить' : 'Войти и купить'}
+                                {user ? t('vinyl.buy') : t('vinyl.loginToBuy')}
                             </Button>
                         </div>
                         <p className="mt-4 flex items-start gap-2 text-xs leading-relaxed text-muted">
                             <CreditCard className="mt-0.5 h-4 w-4 shrink-0 text-brass-500/70" />
-                            Оплата проходит через Stripe: сумма берётся из базы, а на почту
-                            приходит подтверждение заказа.
+                            {t('vinyl.stripeNote')}
                         </p>
                     </div>
 
                     <section className="mt-10" aria-labelledby="reviews-title">
                         <div className="flex items-center justify-between gap-4">
                             <h2 id="reviews-title" className="section-title">
-                                Отзывы
+                                {t('common.reviews')}
                                 <span className="ml-2 align-middle text-base text-muted">
                                     {reviewCount > 0 ? `(${reviewCount})` : ''}
                                 </span>
@@ -320,13 +320,13 @@ export function VinylDetailPage() {
                                 </div>
                             ) : reviewsQuery.isError ? (
                                 <ErrorState
-                                    message="Не удалось загрузить отзывы"
+                                    message={t('vinyl.reviewsLoadError')}
                                     onRetry={() => void reviewsQuery.refetch()}
                                 />
                             ) : reviews.length === 0 ? (
                                 <div className="rounded-2xl border border-dashed border-ink-700 px-5 py-8 text-center text-sm text-muted">
                                     <MessageSquare className="mx-auto mb-3 h-6 w-6 text-brass-500/70" />
-                                    Отзывов пока нет. Будьте первым.
+                                    {t('vinyl.noReviewsBeFirst')}
                                 </div>
                             ) : (
                                 reviews.map((review) => (
@@ -350,37 +350,44 @@ export function VinylDetailPage() {
                                     onClick={() => setReviewPage((page) => Math.max(1, page - 1))}
                                 >
                                     <ChevronLeft className="h-4 w-4" />
-                                    Назад
+                                    {t('common.back')}
                                 </Button>
-                                <span className="text-sm text-muted">Страница {reviewPage}</span>
+                                <span className="text-sm text-muted">
+                                    {t('vinyl.reviewPage', { page: reviewPage })}
+                                </span>
                                 <Button
                                     variant="secondary"
                                     size="sm"
                                     disabled={!canGoNext}
                                     onClick={() => setReviewPage((page) => page + 1)}
                                 >
-                                    Дальше
+                                    {t('common.next')}
                                     <ChevronRight className="h-4 w-4" />
                                 </Button>
                             </div>
                         )}
 
                         <div className="mt-8 rounded-2xl border border-ink-700 bg-ink-900/60 p-5">
-                            <h3 className="font-display text-xl text-cream">Оставить отзыв</h3>
+                            <h3 className="font-display text-xl text-cream">
+                                {t('vinyl.leaveReview')}
+                            </h3>
                             {user ? (
                                 <form className="mt-4 space-y-4" onSubmit={submitReview}>
                                     <div>
                                         <p className="mb-2 text-xs font-medium uppercase tracking-wider text-muted">
-                                            Ваша оценка
+                                            {t('vinyl.yourRating')}
                                         </p>
                                         <Stars value={score} size={26} onChange={setScore} />
                                     </div>
-                                    <Field label="Впечатления" htmlFor="review-content">
+                                    <Field
+                                        label={t('vinyl.impressions')}
+                                        htmlFor="review-content"
+                                    >
                                         <Textarea
                                             id="review-content"
                                             value={content}
                                             onChange={(event) => setContent(event.target.value)}
-                                            placeholder="Как звучит пластинка, состояние конверта, качество издания…"
+                                            placeholder={t('vinyl.reviewPlaceholder')}
                                             maxLength={2000}
                                         />
                                     </Field>
@@ -389,21 +396,21 @@ export function VinylDetailPage() {
                                             {content.length} / 2000
                                         </span>
                                         <Button type="submit" loading={addReview.isPending}>
-                                            Опубликовать
+                                            {t('vinyl.publish')}
                                         </Button>
                                     </div>
                                 </form>
                             ) : (
                                 <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
                                     <p className="text-sm text-muted">
-                                        Отзывы могут оставлять только авторизованные покупатели.
+                                        {t('vinyl.loginToReview')}
                                     </p>
                                     <Link
                                         to="/login"
                                         state={{ from: location }}
                                         className="text-sm text-brass-400 link-underline"
                                     >
-                                        Войти в аккаунт
+                                        {t('vinyl.signIn')}
                                     </Link>
                                 </div>
                             )}
@@ -415,17 +422,17 @@ export function VinylDetailPage() {
             <Modal
                 open={buyOpen}
                 onClose={() => setBuyOpen(false)}
-                title={purchase ? 'Демо-заказ создан' : 'Оформление покупки'}
+                title={purchase ? t('vinyl.demoOrderTitle') : t('vinyl.checkoutTitle')}
                 description={
                     purchase
-                        ? 'Заказ добавлен в раздел «Покупки» профиля.'
-                        : 'Оплата демонстрационная: реальные деньги не списываются.'
+                        ? t('vinyl.orderAdded')
+                        : t('vinyl.demoPayment')
                 }
                 size="sm"
                 footer={
                     purchase ? (
                         <Button className="w-full" onClick={() => setBuyOpen(false)}>
-                            Готово
+                            {t('vinyl.done')}
                         </Button>
                     ) : (
                         <div className="flex gap-3">
@@ -434,7 +441,7 @@ export function VinylDetailPage() {
                                 className="flex-1"
                                 onClick={() => setBuyOpen(false)}
                             >
-                                Отмена
+                                {t('common.cancel')}
                             </Button>
                             <Button
                                 className="flex-1"
@@ -442,7 +449,7 @@ export function VinylDetailPage() {
                                 onClick={() => buy.mutate()}
                             >
                                 <CreditCard className="h-4 w-4" />
-                                Оформить
+                                {t('vinyl.checkout')}
                             </Button>
                         </div>
                     )
@@ -451,28 +458,27 @@ export function VinylDetailPage() {
                 {purchase ? (
                     <div className="space-y-3 text-sm">
                         <div className="flex items-center justify-between gap-4">
-                            <span className="text-muted">Пластинка</span>
+                            <span className="text-muted">{t('vinyl.record')}</span>
                             <span className="text-right text-cream">{vinyl.name}</span>
                         </div>
                         <div className="flex items-center justify-between gap-4">
-                            <span className="text-muted">Сумма</span>
+                            <span className="text-muted">{t('vinyl.amount')}</span>
                             <span className="text-cream">{formatPrice(purchase.amount)}</span>
                         </div>
                         <div className="flex items-center justify-between gap-4">
-                            <span className="text-muted">Номер заказа</span>
+                            <span className="text-muted">{t('vinyl.orderNumber')}</span>
                             <span className="font-mono text-cream/80">#{purchase.id}</span>
                         </div>
                         <div className="flex items-center justify-between gap-4">
-                            <span className="text-muted">Статус платежа</span>
+                            <span className="text-muted">{t('vinyl.paymentStatus')}</span>
                             <Badge tone={purchase.status === 'succeeded' ? 'green' : 'brass'}>
                                 {purchase.status === 'demo'
-                                    ? 'Демо, без списания'
+                                    ? t('common.demoNoCharge')
                                     : purchase.status}
                             </Badge>
                         </div>
                         <p className="rounded-xl border border-ink-700 bg-ink-850 p-3 text-xs leading-relaxed text-muted">
-                            Это демонстрационная оплата: данные карты не запрашиваются, деньги
-                            не списываются. Заказ уже добавлен в раздел «Покупки» профиля.
+                            {t('vinyl.demoPaymentLong')}
                         </p>
                     </div>
                 ) : (
@@ -494,8 +500,7 @@ export function VinylDetailPage() {
                             </div>
                         </div>
                         <p className="rounded-xl border border-brass-500/20 bg-brass-500/5 p-3 text-xs leading-relaxed text-brass-200">
-                            Оплата демонстрационная: данные карты не запрашиваются, реальные
-                            деньги не списываются. После оформления заказ появится в профиле.
+                            {t('vinyl.demoPaymentShort')}
                         </p>
                     </div>
                 )}
@@ -504,7 +509,7 @@ export function VinylDetailPage() {
             <Modal
                 open={reviewToDelete !== null}
                 onClose={() => setReviewToDelete(null)}
-                title="Удалить отзыв?"
+                title={t('vinyl.deleteReviewTitle')}
                 size="sm"
                 footer={
                     <div className="flex gap-3">
@@ -513,7 +518,7 @@ export function VinylDetailPage() {
                             className="flex-1"
                             onClick={() => setReviewToDelete(null)}
                         >
-                            Отмена
+                            {t('common.cancel')}
                         </Button>
                         <Button
                             variant="danger"
@@ -523,13 +528,13 @@ export function VinylDetailPage() {
                                 reviewToDelete && deleteReview.mutate(reviewToDelete.id)
                             }
                         >
-                            Удалить
+                            {t('common.delete')}
                         </Button>
                     </div>
                 }
             >
                 <p className="text-sm text-muted">
-                    Отзыв будет удалён без возможности восстановления.
+                    {t('vinyl.deleteReviewBody')}
                 </p>
             </Modal>
         </div>

@@ -4,6 +4,7 @@ import { useMutation } from '@tanstack/react-query';
 import { UserPlus } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
+import { useI18n } from '@/context/I18nContext';
 import { useToast } from '@/context/ToastContext';
 import { AuthShell } from '@/components/auth/AuthShell';
 import { GoogleAuthButton } from '@/components/auth/GoogleAuthButton';
@@ -32,6 +33,7 @@ const INITIAL_FORM: FormState = {
 
 export function RegisterPage() {
     const { user, signIn } = useAuth();
+    const { t } = useI18n();
     const { notify } = useToast();
     const navigate = useNavigate();
     const location = useLocation();
@@ -45,7 +47,7 @@ export function RegisterPage() {
         mutationFn: api.auth.register,
         onSuccess: (data) => {
             signIn(data.accessToken);
-            notify('Аккаунт создан. Добро пожаловать!', 'success');
+            notify(t('register.success'), 'success');
             navigate(from, { replace: true });
         },
         onError: (mutationError: Error) => setServerError(mutationError.message),
@@ -60,16 +62,16 @@ export function RegisterPage() {
 
     const validate = (): boolean => {
         const next: Partial<Record<keyof FormState, string>> = {};
-        if (!form.firstName.trim()) next.firstName = 'Укажите имя.';
-        if (!form.lastName.trim()) next.lastName = 'Укажите фамилию.';
+        if (!form.firstName.trim()) next.firstName = t('register.firstNameRequired');
+        if (!form.lastName.trim()) next.lastName = t('register.lastNameRequired');
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
-            next.email = 'Введите корректный email.';
+            next.email = t('register.emailInvalid');
         }
         if (form.password.length < 8) {
-            next.password = 'Пароль должен быть не короче 8 символов.';
+            next.password = t('register.passwordShort');
         }
         if (form.confirmPassword !== form.password) {
-            next.confirmPassword = 'Пароли не совпадают.';
+            next.confirmPassword = t('register.passwordMismatch');
         }
         setErrors(next);
         return Object.keys(next).length === 0;
@@ -89,42 +91,54 @@ export function RegisterPage() {
 
     return (
         <AuthShell
-            title="Регистрация"
-            subtitle="Создайте аккаунт, чтобы покупать пластинки и писать отзывы."
+            title={t('register.title')}
+            subtitle={t('register.subtitle')}
             footer={
                 <span>
-                    Уже есть аккаунт?{' '}
+                    {t('register.haveAccount')}{' '}
                     <Link to="/login" state={location.state} className="text-brass-400 link-underline">
-                        Войти
+                        {t('register.signIn')}
                     </Link>
                 </span>
             }
         >
             <form className="space-y-4" onSubmit={handleSubmit} noValidate>
                 <div className="grid gap-4 sm:grid-cols-2">
-                    <Field label="Имя" htmlFor="register-first-name" error={errors.firstName}>
+                    <Field
+                        label={t('register.firstName')}
+                        htmlFor="register-first-name"
+                        error={errors.firstName}
+                    >
                         <Input
                             id="register-first-name"
                             value={form.firstName}
                             onChange={(event) => setField('firstName', event.target.value)}
                             autoComplete="given-name"
-                            placeholder="Иван"
+                            placeholder={t('register.firstNamePlaceholder')}
                             required
                         />
                     </Field>
-                    <Field label="Фамилия" htmlFor="register-last-name" error={errors.lastName}>
+                    <Field
+                        label={t('register.lastName')}
+                        htmlFor="register-last-name"
+                        error={errors.lastName}
+                    >
                         <Input
                             id="register-last-name"
                             value={form.lastName}
                             onChange={(event) => setField('lastName', event.target.value)}
                             autoComplete="family-name"
-                            placeholder="Петров"
+                            placeholder={t('register.lastNamePlaceholder')}
                             required
                         />
                     </Field>
                 </div>
 
-                <Field label="Email" htmlFor="register-email" error={errors.email}>
+                <Field
+                    label={t('register.email')}
+                    htmlFor="register-email"
+                    error={errors.email}
+                >
                     <Input
                         id="register-email"
                         type="email"
@@ -138,9 +152,9 @@ export function RegisterPage() {
 
                 <div className="grid gap-4 sm:grid-cols-2">
                     <Field
-                        label="Пароль"
+                        label={t('register.password')}
                         htmlFor="register-password"
-                        hint="Минимум 8 символов"
+                        hint={t('register.passwordHint')}
                         error={errors.password}
                     >
                         <Input
@@ -154,7 +168,7 @@ export function RegisterPage() {
                         />
                     </Field>
                     <Field
-                        label="Повторите пароль"
+                        label={t('register.confirmPassword')}
                         htmlFor="register-confirm"
                         error={errors.confirmPassword}
                     >
@@ -178,18 +192,18 @@ export function RegisterPage() {
 
                 <Button type="submit" className="w-full" loading={register.isPending}>
                     <UserPlus className="h-4 w-4" />
-                    Создать аккаунт
+                    {t('register.submit')}
                 </Button>
             </form>
 
             <div className="my-5 flex items-center gap-3 text-xs uppercase tracking-wider text-muted">
                 <span className="h-px flex-1 bg-ink-700" />
-                или
+                {t('common.or')}
                 <span className="h-px flex-1 bg-ink-700" />
             </div>
 
             <GoogleAuthButton
-                label="Зарегистрироваться через Google"
+                label={t('register.google')}
                 onError={setServerError}
                 className="w-full"
             />

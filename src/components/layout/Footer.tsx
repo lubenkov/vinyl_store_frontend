@@ -1,7 +1,10 @@
 import { Link } from 'react-router-dom';
 import { Disc3, Github } from 'lucide-react';
+import { useI18n } from '@/context/I18nContext';
 
 export function Footer() {
+    const { t } = useI18n();
+
     return (
         <footer className="mt-20 border-t border-ink-800 bg-ink-950/60">
             <div className="container-page flex flex-col gap-6 py-10 sm:flex-row sm:items-center sm:justify-between">
@@ -12,15 +15,14 @@ export function Footer() {
                     <div>
                         <p className="font-display text-lg text-cream">Vinyl Store</p>
                         <p className="mt-1 max-w-sm text-sm text-muted">
-                            Фронтенд для REST API винилового магазина: каталог, отзывы,
-                            покупки и админ-панель.
+                            {t('footer.description')}
                         </p>
                     </div>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted">
                     <Link to="/" className="link-underline">
-                        Каталог
+                        {t('nav.catalog')}
                     </Link>
                     <a
                         href="https://github.com/lubenkov/vinyl_store"
@@ -29,9 +31,9 @@ export function Footer() {
                         className="inline-flex items-center gap-1.5 link-underline"
                     >
                         <Github className="h-4 w-4" />
-                        Бэкенд на GitHub
+                        {t('footer.backend')}
                     </a>
-                    <span className="text-muted/60">MIT License</span>
+                    <span className="text-muted/60">{t('footer.license')}</span>
                 </div>
             </div>
         </footer>

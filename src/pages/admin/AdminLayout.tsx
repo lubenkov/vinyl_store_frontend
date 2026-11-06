@@ -1,33 +1,35 @@
 import { NavLink, Outlet } from 'react-router-dom';
 import { Disc3, Download, ScrollText, Send } from 'lucide-react';
+import { useI18n } from '@/context/I18nContext';
 import { cn } from '@/lib/cn';
 
-const TABS = [
-    { to: '/admin/vinyls', label: 'Пластинки', icon: Disc3 },
-    { to: '/admin/discogs', label: 'Импорт из Discogs', icon: Download },
-    { to: '/admin/telegram', label: 'Telegram', icon: Send },
-    { to: '/admin/logs', label: 'Журнал действий', icon: ScrollText },
-];
-
 export function AdminLayout() {
+    const { t } = useI18n();
+
+    const tabs = [
+        { to: '/admin/vinyls', label: t('admin.tabVinyls'), icon: Disc3 },
+        { to: '/admin/discogs', label: t('admin.tabDiscogs'), icon: Download },
+        { to: '/admin/telegram', label: t('admin.tabTelegram'), icon: Send },
+        { to: '/admin/logs', label: t('admin.tabLogs'), icon: ScrollText },
+    ];
+
     return (
         <div className="container-page py-8">
             <div className="flex flex-col gap-2">
                 <p className="text-xs uppercase tracking-[0.24em] text-brass-400">
-                    Администрирование
+                    {t('admin.eyebrow')}
                 </p>
                 <h1 className="font-display text-3xl text-cream sm:text-4xl">
-                    Управление магазином
+                    {t('admin.title')}
                 </h1>
                 <p className="max-w-2xl text-sm text-muted">
-                    Каталог, импорт релизов, уведомления и журнал действий. Все изменения
-                    пишутся в лог на стороне API.
+                    {t('admin.description')}
                 </p>
             </div>
 
             <div className="mt-6 overflow-x-auto">
                 <nav className="flex min-w-max gap-1 rounded-xl border border-ink-700 bg-ink-900/60 p-1">
-                    {TABS.map(({ to, label, icon: Icon }) => (
+                    {tabs.map(({ to, label, icon: Icon }) => (
                         <NavLink
                             key={to}
                             to={to}

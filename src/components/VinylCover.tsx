@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Disc3 } from 'lucide-react';
+import { useI18n } from '@/context/I18nContext';
 import { cn } from '@/lib/cn';
 import type { Vinyl } from '@/types/api';
 
@@ -26,6 +27,7 @@ export function VinylCover({
     rounded = true,
     eager = false,
 }: VinylCoverProps) {
+    const { t } = useI18n();
     const src = vinyl.image;
     const usable = isUsableImage(src);
     const [failed, setFailed] = useState(!usable);
@@ -45,7 +47,7 @@ export function VinylCover({
             {!failed && usable ? (
                 <img
                     src={src}
-                    alt={`Обложка: ${vinyl.name}`}
+                    alt={t('common.coverAlt', { name: vinyl.name })}
                     loading={eager ? 'eager' : 'lazy'}
                     onError={() => setFailed(true)}
                     className={cn(

@@ -1,4 +1,5 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useI18n } from '@/context/I18nContext';
 import { cn } from '@/lib/cn';
 
 interface PaginationProps {
@@ -25,19 +26,23 @@ function buildPages(current: number, totalPages: number): Array<number | 'ellips
 }
 
 export function Pagination({ page, pageSize, total, onChange, className }: PaginationProps) {
+    const { t } = useI18n();
     const totalPages = Math.max(1, Math.ceil(total / pageSize));
     if (totalPages <= 1) return null;
 
     const pages = buildPages(page, totalPages);
 
     return (
-        <nav className={cn('flex flex-wrap items-center justify-center gap-1.5', className)} aria-label="Пагинация">
+        <nav
+            className={cn('flex flex-wrap items-center justify-center gap-1.5', className)}
+            aria-label={t('pagination.label')}
+        >
             <button
                 type="button"
                 onClick={() => onChange(page - 1)}
                 disabled={page <= 1}
                 className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-ink-700 text-muted transition hover:border-brass-500/50 hover:text-cream disabled:cursor-not-allowed disabled:opacity-40"
-                aria-label="Предыдущая страница"
+                aria-label={t('pagination.previous')}
             >
                 <ChevronLeft className="h-4 w-4" />
             </button>
@@ -70,7 +75,7 @@ export function Pagination({ page, pageSize, total, onChange, className }: Pagin
                 onClick={() => onChange(page + 1)}
                 disabled={page >= totalPages}
                 className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-ink-700 text-muted transition hover:border-brass-500/50 hover:text-cream disabled:cursor-not-allowed disabled:opacity-40"
-                aria-label="Следующая страница"
+                aria-label={t('pagination.next')}
             >
                 <ChevronRight className="h-4 w-4" />
             </button>

@@ -3,8 +3,9 @@ import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ExternalLink, Pencil, Plus, Trash2 } from 'lucide-react';
 import { api } from '@/lib/api';
+import { useI18n } from '@/context/I18nContext';
 import { useToast } from '@/context/ToastContext';
-import { cleanDescription, formatPrice } from '@/lib/format';
+import { cleanDescription } from '@/lib/format';
 import { VinylCover } from '@/components/VinylCover';
 import { Button } from '@/components/ui/Button';
 import { Field, Input, Textarea } from '@/components/ui/Form';
@@ -33,6 +34,7 @@ const EMPTY_FORM: VinylFormState = {
 
 export function AdminVinylsPage() {
     const queryClient = useQueryClient();
+    const { t, formatPrice } = useI18n();
     const { notify } = useToast();
 
     const [page, setPage] = useState(1);
@@ -58,7 +60,7 @@ export function AdminVinylsPage() {
     const createVinyl = useMutation({
         mutationFn: api.vinyls.create,
         onSuccess: (vinyl) => {
-            notify(`Пластинка «${vinyl.name}» добавлена.`, 'success');
+            notify(t('adminVinyls.created', { name: vinyl.name }), 'success');
             setFormOpen(false);
             setPage(1);
             void invalidate();
@@ -70,7 +72,7 @@ export function AdminVinylsPage() {
         mutationFn: ({ id, input }: { id: number; input: Parameters<typeof api.vinyls.update>[1] }) =>
             api.vinyls.update(id, input),
         onSuccess: () => {
-            notify('Изменения сохранены.', 'success');
+            notify(t('adminVinyls.updated'), 'success');
             setFormOpen(false);
             void invalidate();
         },
@@ -80,7 +82,7 @@ export function AdminVinylsPage() {
     const deleteVinyl = useMutation({
         mutationFn: api.vinyls.remove,
         onSuccess: () => {
-            notify('Пластинка удалена.', 'success');
+            notify(t('adminVinyls.deleted'), 'success');
             setDeleting(null);
             if (query.data?.rows.length === 1 && page > 1) setPage(page - 1);
             void invalidate();
@@ -118,11 +120,11 @@ export function AdminVinylsPage() {
 
         const price = Number(form.price);
         if (!form.name.trim() || !form.author.trim()) {
-            setFormError('Название и исполнитель обязательны.');
+            setFormError(t('adminVinyls.nameRequired'));
             return;
         }
         if (!Number.isFinite(price) || price <= 0) {
-            setFormError('Цена должна быть положительным числом.');
+            setFormError(t('adminVinyls.pricePositive'));
             return;
         }
 
@@ -145,14 +147,14 @@ export function AdminVinylsPage() {
         <section className="space-y-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                    <h2 className="section-title">Пластинки</h2>
+                    <h2 className="section-title">{t('adminVinyls.title')}</h2>
                     <p className="mt-1 text-sm text-muted">
-                        Всего в каталоге: {total}. Новые записи — первыми.
+                        {t('adminVinyls.total', { total })}
                     </p>
                 </div>
                 <Button onClick={openCreate}>
                     <Plus className="h-4 w-4" />
-                    Добавить пластинку
+                    {t('adminVinyls.add')}
                 </Button>
             </div>
 
@@ -160,17 +162,17 @@ export function AdminVinylsPage() {
                 <Spinner />
             ) : query.isError ? (
                 <ErrorState
-                    message={query.error instanceof Error ? query.error.message : 'Ошибка загрузки'}
+                    message={query.error instanceof Error ? query.error.message : t('common.loadError')}
                     onRetry={() => void query.refetch()}
                 />
             ) : rows.length === 0 ? (
                 <EmptyState
-                    title="Каталог пуст"
-                    description="Добавьте первую пластинку вручную или импортируйте релиз из Discogs."
+                    title={t('adminVinyls.emptyTitle')}
+                    description={t('adminVinyls.emptyDescription')}
                     action={
                         <Button onClick={openCreate}>
                             <Plus className="h-4 w-4" />
-                            Добавить пластинку
+                            {t('adminVinyls.add')}
                         </Button>
                     }
                 />
@@ -180,11 +182,15 @@ export function AdminVinylsPage() {
                         <thead>
                             <tr>
                                 <th>#</th>
-                                <th>Пластинка</th>
-                                <th className="hidden sm:table-cell">Исполнитель</th>
-                                <th>Цена</th>
-                                <th className="hidden md:table-cell">Отзывы</th>
-                                <th className="text-right">Действия</th>
+                                <th>{t('adminVinyls.colRecord')}</th>
+                                <th className="hidden sm:table-cell">
+                                    {t('adminVinyls.colArtist')}
+                                </th>
+                                <th>{t('adminVinyls.colPrice')}</th>
+                                <th className="hidden md:table-cell">
+                                    {t('adminVinyls.colReviews')}
+                                </th>
+                                <th className="text-right">{t('adminVinyls.colActions')}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -220,7 +226,7 @@ export function AdminVinylsPage() {
                                             <Link
                                                 to={`/vinyls/${vinyl.id}`}
                                                 className="rounded-lg p-2 text-muted transition hover:bg-ink-800 hover:text-cream"
-                                                aria-label="Открыть страницу пластинки"
+                                                aria-label={t('adminVinyls.open')}
                                             >
                                                 <ExternalLink className="h-4 w-4" />
                                             </Link>
@@ -228,7 +234,7 @@ export function AdminVinylsPage() {
                                                 type="button"
                                                 onClick={() => openEdit(vinyl)}
                                                 className="rounded-lg p-2 text-muted transition hover:bg-ink-800 hover:text-cream"
-                                                aria-label="Редактировать"
+                                                aria-label={t('adminVinyls.edit')}
                                             >
                                                 <Pencil className="h-4 w-4" />
                                             </button>
@@ -236,7 +242,7 @@ export function AdminVinylsPage() {
                                                 type="button"
                                                 onClick={() => setDeleting(vinyl)}
                                                 className="rounded-lg p-2 text-muted transition hover:bg-red-500/10 hover:text-red-400"
-                                                aria-label="Удалить"
+                                                aria-label={t('adminVinyls.delete')}
                                             >
                                                 <Trash2 className="h-4 w-4" />
                                             </button>
@@ -256,11 +262,13 @@ export function AdminVinylsPage() {
             <Modal
                 open={formOpen}
                 onClose={() => setFormOpen(false)}
-                title={editing ? 'Редактировать пластинку' : 'Новая пластинка'}
+                title={
+                    editing ? t('adminVinyls.editTitle') : t('adminVinyls.newTitle')
+                }
                 description={
                     editing
-                        ? `ID ${editing.id}. Изменения попадут в журнал действий.`
-                        : 'Заполните карточку товара. Обложка задаётся ссылкой.'
+                        ? t('adminVinyls.editDescription', { id: editing.id })
+                        : t('adminVinyls.newDescription')
                 }
                 footer={
                     <div className="flex gap-3">
@@ -269,7 +277,7 @@ export function AdminVinylsPage() {
                             className="flex-1"
                             onClick={() => setFormOpen(false)}
                         >
-                            Отмена
+                            {t('common.cancel')}
                         </Button>
                         <Button
                             className="flex-1"
@@ -277,13 +285,13 @@ export function AdminVinylsPage() {
                             form="vinyl-form"
                             loading={createVinyl.isPending || updateVinyl.isPending}
                         >
-                            {editing ? 'Сохранить' : 'Добавить'}
+                            {editing ? t('common.save') : t('adminVinyls.add')}
                         </Button>
                     </div>
                 }
             >
                 <form id="vinyl-form" className="space-y-4" onSubmit={handleSubmit}>
-                    <Field label="Название" htmlFor="vinyl-name">
+                    <Field label={t('adminVinyls.name')} htmlFor="vinyl-name">
                         <Input
                             id="vinyl-name"
                             value={form.name}
@@ -293,7 +301,7 @@ export function AdminVinylsPage() {
                         />
                     </Field>
                     <div className="grid gap-4 sm:grid-cols-2">
-                        <Field label="Исполнитель" htmlFor="vinyl-author">
+                        <Field label={t('adminVinyls.artist')} htmlFor="vinyl-author">
                             <Input
                                 id="vinyl-author"
                                 value={form.author}
@@ -302,7 +310,7 @@ export function AdminVinylsPage() {
                                 required
                             />
                         </Field>
-                        <Field label="Цена, USD" htmlFor="vinyl-price">
+                        <Field label={t('adminVinyls.priceUsd')} htmlFor="vinyl-price">
                             <Input
                                 id="vinyl-price"
                                 type="number"
@@ -315,7 +323,7 @@ export function AdminVinylsPage() {
                             />
                         </Field>
                     </div>
-                    <Field label="Ссылка на обложку" htmlFor="vinyl-image">
+                    <Field label={t('adminVinyls.image')} htmlFor="vinyl-image">
                         <Input
                             id="vinyl-image"
                             type="url"
@@ -324,12 +332,12 @@ export function AdminVinylsPage() {
                             placeholder="https://…"
                         />
                     </Field>
-                    <Field label="Описание" htmlFor="vinyl-description">
+                    <Field label={t('adminVinyls.description')} htmlFor="vinyl-description">
                         <Textarea
                             id="vinyl-description"
                             value={form.description}
                             onChange={(event) => setField('description', event.target.value)}
-                            placeholder="Издание, состояние конверта, особенности пресса…"
+                            placeholder={t('adminVinyls.descriptionPlaceholder')}
                         />
                     </Field>
                     {formError && (
@@ -343,7 +351,7 @@ export function AdminVinylsPage() {
             <Modal
                 open={deleting !== null}
                 onClose={() => setDeleting(null)}
-                title="Удалить пластинку?"
+                title={t('adminVinyls.deleteTitle')}
                 size="sm"
                 footer={
                     <div className="flex gap-3">
@@ -352,7 +360,7 @@ export function AdminVinylsPage() {
                             className="flex-1"
                             onClick={() => setDeleting(null)}
                         >
-                            Отмена
+                            {t('common.cancel')}
                         </Button>
                         <Button
                             variant="danger"
@@ -360,13 +368,13 @@ export function AdminVinylsPage() {
                             loading={deleteVinyl.isPending}
                             onClick={() => deleting && deleteVinyl.mutate(deleting.id)}
                         >
-                            Удалить
+                            {t('common.delete')}
                         </Button>
                     </div>
                 }
             >
                 <p className="text-sm text-muted">
-                    «{deleting?.name}» будет удалена вместе со связанными отзывами и покупками.
+                    {t('adminVinyls.deleteBody', { name: deleting?.name ?? '' })}
                 </p>
             </Modal>
         </section>

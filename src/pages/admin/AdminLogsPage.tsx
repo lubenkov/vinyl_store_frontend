@@ -2,12 +2,13 @@ import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { RefreshCw, Search } from 'lucide-react';
 import { api } from '@/lib/api';
-import { formatDateTime } from '@/lib/format';
+import { useI18n } from '@/context/I18nContext';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Form';
 import { EmptyState, ErrorState, Spinner } from '@/components/ui/States';
 
 export function AdminLogsPage() {
+    const { t, formatDateTime } = useI18n();
     const [filter, setFilter] = useState('');
     const query = useQuery({
         queryKey: ['logs'],
@@ -25,10 +26,9 @@ export function AdminLogsPage() {
         <section className="space-y-5">
             <div className="flex flex-wrap items-end justify-between gap-3">
                 <div>
-                    <h2 className="section-title">Журнал действий</h2>
+                    <h2 className="section-title">{t('adminLogs.title')}</h2>
                     <p className="mt-1 text-sm text-muted">
-                        Каждое создание, изменение и удаление на бэкенде пишется в таблицу
-                        logs.
+                        {t('adminLogs.description')}
                     </p>
                 </div>
                 <Button
@@ -37,7 +37,7 @@ export function AdminLogsPage() {
                     loading={query.isFetching}
                 >
                     <RefreshCw className="h-4 w-4" />
-                    Обновить
+                    {t('adminLogs.refresh')}
                 </Button>
             </div>
 
@@ -46,9 +46,9 @@ export function AdminLogsPage() {
                 <Input
                     value={filter}
                     onChange={(event) => setFilter(event.target.value)}
-                    placeholder="Фильтр по тексту действия…"
+                    placeholder={t('adminLogs.filterPlaceholder')}
                     className="pl-10"
-                    aria-label="Фильтр журнала"
+                    aria-label={t('adminLogs.filterAria')}
                 />
             </div>
 
@@ -56,16 +56,16 @@ export function AdminLogsPage() {
                 <Spinner />
             ) : query.isError ? (
                 <ErrorState
-                    message={query.error instanceof Error ? query.error.message : 'Ошибка загрузки'}
+                    message={query.error instanceof Error ? query.error.message : t('common.loadError')}
                     onRetry={() => void query.refetch()}
                 />
             ) : logs.length === 0 ? (
                 <EmptyState
-                    title={filter ? 'Совпадений нет' : 'Журнал пуст'}
+                    title={filter ? t('adminLogs.noMatches') : t('adminLogs.empty')}
                     description={
                         filter
-                            ? 'Попробуйте другой запрос.'
-                            : 'Действия появятся здесь после первых изменений в каталоге.'
+                            ? t('adminLogs.tryAnother')
+                            : t('adminLogs.emptyDescription')
                     }
                 />
             ) : (
@@ -74,8 +74,8 @@ export function AdminLogsPage() {
                         <thead>
                             <tr>
                                 <th className="w-16">#</th>
-                                <th className="w-44">Время</th>
-                                <th>Действие</th>
+                                <th className="w-44">{t('adminLogs.time')}</th>
+                                <th>{t('adminLogs.action')}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -99,7 +99,10 @@ export function AdminLogsPage() {
 
             {query.data && (
                 <p className="text-xs text-muted">
-                    Показано {logs.length} из {query.data.length} записей.
+                    {t('adminLogs.shown', {
+                        shown: logs.length,
+                        total: query.data.length,
+                    })}
                 </p>
             )}
         </section>

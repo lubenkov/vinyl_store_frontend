@@ -2,8 +2,8 @@ import { useState, type FormEvent } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Download, ExternalLink, Search } from 'lucide-react';
 import { api } from '@/lib/api';
+import { useI18n } from '@/context/I18nContext';
 import { useToast } from '@/context/ToastContext';
-import { formatPrice } from '@/lib/format';
 import { VinylCover } from '@/components/VinylCover';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -11,6 +11,7 @@ import { Field, Input } from '@/components/ui/Form';
 import { EmptyState, ErrorState, Spinner } from '@/components/ui/States';
 
 export function AdminDiscogsPage() {
+    const { t, formatPrice } = useI18n();
     const { notify } = useToast();
     const queryClient = useQueryClient();
 
@@ -28,7 +29,7 @@ export function AdminDiscogsPage() {
     const importVinyl = useMutation({
         mutationFn: api.discogs.import,
         onSuccess: (vinyl) => {
-            notify(`«${vinyl.name}» импортирована в каталог.`, 'success');
+            notify(t('adminDiscogs.imported', { name: vinyl.name }), 'success');
             void queryClient.invalidateQueries({ queryKey: ['vinyls'] });
         },
         onError: (error) => notify(error.message, 'error'),
@@ -38,7 +39,7 @@ export function AdminDiscogsPage() {
         event.preventDefault();
         const id = Number(input.trim());
         if (!Number.isInteger(id) || id <= 0) {
-            setInputError('Введите числовой ID релиза Discogs.');
+            setInputError(t('adminDiscogs.invalidId'));
             return;
         }
         setInputError(null);
@@ -48,10 +49,9 @@ export function AdminDiscogsPage() {
     return (
         <section className="space-y-6">
             <div>
-                <h2 className="section-title">Импорт из Discogs</h2>
+                <h2 className="section-title">{t('adminDiscogs.title')}</h2>
                 <p className="mt-1 max-w-2xl text-sm text-muted">
-                    Найдите релиз по ID, проверьте карточку и добавьте его в каталог одним
-                    нажатием. Импорт доступен только администратору.
+                    {t('adminDiscogs.description')}
                 </p>
             </div>
 
@@ -59,32 +59,38 @@ export function AdminDiscogsPage() {
                 onSubmit={handleSubmit}
                 className="flex flex-col gap-3 rounded-2xl border border-ink-700 bg-ink-900/60 p-4 sm:flex-row sm:items-end"
             >
-                <Field label="ID релиза Discogs" htmlFor="discogs-id" error={inputError ?? undefined} className="flex-1">
+                <Field
+                    label={t('adminDiscogs.idLabel')}
+                    htmlFor="discogs-id"
+                    error={inputError ?? undefined}
+                    className="flex-1"
+                >
                     <Input
                         id="discogs-id"
                         inputMode="numeric"
                         value={input}
                         onChange={(event) => setInput(event.target.value)}
-                        placeholder="Например, 249504"
+                        placeholder={t('adminDiscogs.idPlaceholder')}
                     />
                 </Field>
                 <Button type="submit" loading={preview.isFetching}>
                     <Search className="h-4 w-4" />
-                    Найти релиз
+                    {t('adminDiscogs.find')}
                 </Button>
             </form>
 
             <div className="rounded-xl border border-ink-800 bg-ink-850/50 px-4 py-3 text-xs leading-relaxed text-muted">
-                Для запросов к Discogs на бэкенде должны быть заданы{' '}
-                <code className="text-cream/80">DISCOGS_KEY</code> и{' '}
-                <code className="text-cream/80">DISCOGS_SECRET</code>. Без них API вернёт
-                ошибку.
+                {t('adminDiscogs.credentialsPrefix')}{' '}
+                <code className="text-cream/80">DISCOGS_KEY</code>{' '}
+                {t('adminDiscogs.and')}{' '}
+                <code className="text-cream/80">DISCOGS_SECRET</code>
+                {t('adminDiscogs.credentialsSuffix')}
             </div>
 
             {releaseId === null ? (
                 <EmptyState
-                    title="Укажите ID релиза"
-                    description="ID виден в адресе страницы релиза на discogs.com: /release/249504-..."
+                    title={t('adminDiscogs.enterIdTitle')}
+                    description={t('adminDiscogs.enterIdDescription')}
                 />
             ) : preview.isLoading ? (
                 <Spinner />
@@ -93,7 +99,7 @@ export function AdminDiscogsPage() {
                     message={
                         preview.error instanceof Error
                             ? preview.error.message
-                            : 'Не удалось получить релиз'
+                            : t('adminDiscogs.fetchError')
                     }
                     onRetry={() => void preview.refetch()}
                 />
@@ -106,7 +112,7 @@ export function AdminDiscogsPage() {
                                 <Badge tone="brass">Discogs #{releaseId}</Badge>
                                 {preview.data.score !== undefined && (
                                     <Badge tone="neutral">
-                                        Рейтинг:{' '}
+                                        {t('adminDiscogs.rating')}{' '}
                                         {typeof preview.data.score === 'number'
                                             ? preview.data.score.toFixed(2)
                                             : preview.data.score}
@@ -130,7 +136,7 @@ export function AdminDiscogsPage() {
                                     onClick={() => importVinyl.mutate(releaseId)}
                                 >
                                     <Download className="h-4 w-4" />
-                                    Импортировать в каталог
+                                    {t('adminDiscogs.import')}
                                 </Button>
                                 <a
                                     href={`https://www.discogs.com/release/${releaseId}`}
@@ -139,12 +145,11 @@ export function AdminDiscogsPage() {
                                     className="inline-flex h-11 items-center gap-2 rounded-xl border border-ink-600 px-4 text-sm text-cream transition hover:border-brass-500/60"
                                 >
                                     <ExternalLink className="h-4 w-4" />
-                                    Открыть на Discogs
+                                    {t('adminDiscogs.open')}
                                 </a>
                             </div>
                             <p className="mt-3 text-xs text-muted">
-                                Цена берётся из lowest_price Discogs; если её нет, будет 0.
-                                Проверьте цену после импорта.
+                                {t('adminDiscogs.priceNote')}
                             </p>
                         </div>
                     </div>

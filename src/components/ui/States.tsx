@@ -1,12 +1,15 @@
 import type { ReactNode } from 'react';
 import { AlertTriangle, Disc3, Loader2, RefreshCw } from 'lucide-react';
+import { useI18n } from '@/context/I18nContext';
 import { Button } from '@/components/ui/Button';
 
 export function Spinner({ className = 'h-8 w-8' }: { className?: string }) {
+    const { t } = useI18n();
+
     return (
         <div className="flex items-center justify-center py-16" role="status" aria-live="polite">
             <Loader2 className={`${className} animate-spin text-brass-500`} />
-            <span className="sr-only">Загрузка…</span>
+            <span className="sr-only">{t('common.loading')}</span>
         </div>
     );
 }
@@ -41,6 +44,8 @@ export function ErrorState({
     onRetry?: () => void;
     className?: string;
 }) {
+    const { t } = useI18n();
+
     return (
         <div
             className={`flex flex-col items-center justify-center gap-4 rounded-2xl border border-red-500/20 bg-red-500/5 px-6 py-12 text-center ${className ?? ''}`}
@@ -51,7 +56,7 @@ export function ErrorState({
             {onRetry && (
                 <Button variant="secondary" size="sm" onClick={onRetry}>
                     <RefreshCw className="h-4 w-4" />
-                    Повторить
+                    {t('common.retry')}
                 </Button>
             )}
         </div>

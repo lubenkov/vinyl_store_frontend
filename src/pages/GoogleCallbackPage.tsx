@@ -1,15 +1,19 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import { useI18n } from '@/context/I18nContext';
 import { OAUTH_STATE_KEY } from '@/lib/oauth';
 import { buttonStyles } from '@/components/ui/Button';
 import { EmptyState, Spinner } from '@/components/ui/States';
 
+type CallbackError = 'missingToken' | 'stateMismatch' | null;
+
 export function GoogleCallbackPage() {
     const { signIn } = useAuth();
+    const { t } = useI18n();
     const navigate = useNavigate();
     const location = useLocation();
-    const [error, setError] = useState<string | null>(null);
+    const [error, setError] = useState<CallbackError>(null);
 
     useEffect(() => {
         const params = new URLSearchParams(location.hash.replace(/^#/, ''));
@@ -32,14 +36,12 @@ export function GoogleCallbackPage() {
         );
 
         if (!accessToken) {
-            setError('Google не вернул токен. Попробуйте войти ещё раз.');
+            setError('missingToken');
             return;
         }
 
         if (!state || !expectedState || state !== expectedState) {
-            setError(
-                'Не удалось проверить вход через Google. Начните вход заново.',
-            );
+            setError('stateMismatch');
             return;
         }
 
@@ -51,11 +53,15 @@ export function GoogleCallbackPage() {
         return (
             <div className="container-page py-16">
                 <EmptyState
-                    title="Вход через Google не удался"
-                    description={error}
+                    title={t('google.failedTitle')}
+                    description={
+                        error === 'missingToken'
+                            ? t('google.missingToken')
+                            : t('google.stateMismatch')
+                    }
                     action={
                         <Link to="/login" className={buttonStyles('secondary', 'md')}>
-                            Вернуться ко входу
+                            {t('google.backToLogin')}
                         </Link>
                     }
                 />
