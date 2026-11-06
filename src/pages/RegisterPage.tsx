@@ -6,6 +6,7 @@ import { api } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
 import { AuthShell } from '@/components/auth/AuthShell';
+import { GoogleAuthButton } from '@/components/auth/GoogleAuthButton';
 import { Button } from '@/components/ui/Button';
 import { Field, Input } from '@/components/ui/Form';
 
@@ -180,6 +181,18 @@ export function RegisterPage() {
                     Создать аккаунт
                 </Button>
             </form>
+
+            <div className="my-5 flex items-center gap-3 text-xs uppercase tracking-wider text-muted">
+                <span className="h-px flex-1 bg-ink-700" />
+                или
+                <span className="h-px flex-1 bg-ink-700" />
+            </div>
+
+            <GoogleAuthButton
+                label="Зарегистрироваться через Google"
+                onError={setServerError}
+                className="w-full"
+            />
         </AuthShell>
     );
 }
