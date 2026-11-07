@@ -11,7 +11,7 @@ export type TranslationEntry = string | PluralEntry;
 export type TranslationParams = Record<string, string | number>;
 
 const en = {
-    'meta.title': 'Vinyl Store — vinyl record shop',
+    'meta.title': 'Vinyl Store',
     'meta.description': 'Vinyl record catalog, reviews and purchases.',
 
     'language.label': 'Language',
@@ -342,7 +342,7 @@ const en = {
 export type TranslationKey = keyof typeof en;
 
 const ru: Record<TranslationKey, TranslationEntry> = {
-    'meta.title': 'Vinyl Store — виниловая лавка',
+    'meta.title': 'Vinyl Store',
     'meta.description': 'Каталог пластинок, отзывы и покупки.',
 
     'language.label': 'Язык',
