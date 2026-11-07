@@ -34,7 +34,7 @@ const en = {
     'common.vinyl': 'Vinyl',
     'common.reviews': 'Reviews',
     'common.noReviewsShort': 'no reviews',
-    'common.noReviews': 'No reviews yet.',
+    'common.noReviews': 'No reviews yet',
     'common.reviewsCount': {
         one: '{count} review',
         other: '{count} reviews',
@@ -367,7 +367,7 @@ const ru: Record<TranslationKey, TranslationEntry> = {
     'common.vinyl': 'Винил',
     'common.reviews': 'Отзывы',
     'common.noReviewsShort': 'без отзывов',
-    'common.noReviews': 'Отзывов пока нет.',
+    'common.noReviews': 'Отзывов пока нет',
     'common.reviewsCount': {
         one: '{count} отзыв',
         few: '{count} отзыва',
