@@ -52,9 +52,7 @@ const en = {
     'nav.openMenu': 'Open menu',
     'nav.closeMenu': 'Close menu',
 
-    'footer.description':
-        'Frontend for the vinyl store REST API: catalog, reviews, purchases and an admin panel.',
-    'footer.backend': 'Backend on GitHub',
+    'footer.github': 'GitHub',
     'footer.license': 'MIT License',
 
     'auth.tagline': "Music sounds better when it's yours.",
@@ -387,9 +385,7 @@ const ru: Record<TranslationKey, TranslationEntry> = {
     'nav.openMenu': 'Открыть меню',
     'nav.closeMenu': 'Закрыть меню',
 
-    'footer.description':
-        'Фронтенд для REST API винилового магазина: каталог, отзывы, покупки и админ-панель.',
-    'footer.backend': 'Бэкенд на GitHub',
+    'footer.github': 'GitHub',
     'footer.license': 'MIT License',
 
     'auth.tagline': 'Музыка звучит лучше, когда она ваша.',
