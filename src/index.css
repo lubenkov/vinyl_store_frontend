@@ -53,6 +53,19 @@
         @apply underline decoration-brass-500/40 underline-offset-4 transition hover:decoration-brass-400;
     }
 
+    .select-input {
+        @apply cursor-pointer appearance-none hover:border-brass-500/50;
+        color-scheme: dark;
+        background-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2020%2020'%20fill='none'%20stroke='%23a49a8c'%20stroke-width='1.6'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M5%207.5l5%205%205-5'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 0.9rem center;
+        background-size: 1rem 1rem;
+    }
+
+    .select-input option {
+        @apply bg-ink-900 text-cream;
+    }
+
     .table-shell {
         @apply overflow-hidden rounded-2xl border border-ink-700;
     }
